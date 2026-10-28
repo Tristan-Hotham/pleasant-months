@@ -625,6 +625,6 @@ segsSync(); syncBand();
 document.getElementById("theme").onclick = () => { const r = document.documentElement; r.dataset.theme = isDark() ? "light" : "dark"; basemap(); redraws.forEach(f => f()); drawPlace(); if (ready) { repaint(); legend(); } };
 load().catch(err => { document.getElementById("place").innerHTML = `<p class="loading">Sorry, the climate data did not load (${esc(err.message)}). This page needs a recent browser.</p>`; });
 </script>
-<script src="https://tristan-hotham.github.io/assets/site-nav.js" defer></script>
+<script src="/assets/site-nav.js" defer></script>
 </body>
 </html>
