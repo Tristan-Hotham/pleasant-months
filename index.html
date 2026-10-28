@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>How Many Pleasant Months?</title>
+<meta name="description" content="An interactive world map of how many months a year have an average daily high in a band you choose, for 1970 to 2000 and for 2041 to 2060. Search any city of 15,000 people or more.">
+<meta property="og:title" content="How many months a year are pleasantly warm?">
+<meta property="og:description" content="Pick your own idea of pleasant. For people in the world's cities the average is 3.6 months a year whose average high is 18 to 27 C; by 2041 to 2060 it is 2.9. Search any city, move the band, pick a month.">
+<meta property="og:image" content="https://tristan-hotham.github.io/pleasant-months/header.png">
+<meta property="og:url" content="https://tristan-hotham.github.io/pleasant-months/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800;9..144,900&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* Warm sand paper. Months in the band run from pale apricot (1) to deep terracotta (12); no pleasant month is pale
+   blue (too cold all year) or pale mauve (too hot all year). Losses are plum, gains teal. */
+:root{
+  --bg:#F7F0E3; --panel:#EEE4D1; --fg:#231C16; --muted:#6E6153; --rule:#E0D4BE; --card:#FCF8EF; --border:#CDBDA2;
+  --hot:#C2562E; --now:#231C16; --fut:#C2562E; --gain:#2C7A7B; --loss:#8E3B5F; --band:#E9A85A; --cold:#5E86AD;
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17130F; --panel:#221D17; --fg:#F0E8DA; --muted:#AA9D8B; --rule:#38302A; --card:#211C17; --border:#4D443A;
+  --hot:#EE8655; --now:#F0E8DA; --fut:#EE8655; --gain:#5BB8B8; --loss:#D57FA6; --band:#E9A85A; --cold:#8FB4D8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17130F; --panel:#221D17; --fg:#F0E8DA; --muted:#AA9D8B; --rule:#38302A; --card:#211C17; --border:#4D443A;
+  --hot:#EE8655; --now:#F0E8DA; --fut:#EE8655; --gain:#5BB8B8; --loss:#D57FA6; --band:#E9A85A; --cold:#8FB4D8; color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 18px/1.62 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow-x:hidden}
+.wrap{max-width:680px;margin:0 auto;padding-block:28px 64px}
+.wrap .bleed{width:min(1120px,calc(100vw - 32px));margin-left:calc((100% - min(1120px,100vw - 32px))/2);margin-right:0}
+a{color:inherit;text-decoration-color:var(--hot);text-underline-offset:3px}
+.kicker{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.kicker b{background:var(--hot);color:#fff;padding:5px 8px;font-weight:500}
+header.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 24px;align-items:end;border-bottom:6px double var(--fg);padding-bottom:22px;margin-top:18px}
+h1{font:900 clamp(42px,10.5vw,90px)/.92 var(--display);letter-spacing:-.02em;margin:0;text-wrap:balance;font-variation-settings:"SOFT" 50}
+h1 em{font-style:normal;color:var(--hot)}
+.mark{width:clamp(80px,17vw,136px);height:auto;display:block}
+.dek{grid-column:1/-1;font-size:21px;line-height:1.42;margin:8px 0 0;max-width:48ch}
+.byline{font:400 13px/1.4 var(--mono);color:var(--muted);margin-top:14px}
+h2{font:800 34px/1.04 var(--display);letter-spacing:-.01em;margin:52px 0 10px;text-wrap:balance}
+h2 .n{font:500 13px/1 var(--mono);color:var(--hot);display:block;letter-spacing:.1em;margin-bottom:10px}
+h3{font:600 20px/1.25 var(--display);margin:28px 0 6px}
+p{margin:0 0 16px}
+.lede::first-letter{font:900 72px/.8 var(--display);float:left;margin:6px 10px 0 0;color:var(--hot)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:26px 0 8px}
+.stats div{background:var(--card);padding:14px 12px}
+.stats b{display:block;font:900 clamp(26px,5.6vw,38px)/1 var(--display);color:var(--fg)}
+.stats b.h{color:var(--hot)}
+.stats span{font:400 12px/1.35 var(--mono);color:var(--muted);display:block;margin-top:6px}
+@media (max-width:600px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.figure{margin:26px 0 30px}
+.fig-h{font:600 19px/1.25 var(--display);margin:0 0 4px}
+.fig-sub{font:400 13px/1.45 var(--mono);color:var(--muted);margin:0 0 12px}
+.src{font:400 12px/1.45 var(--mono);color:var(--muted);margin-top:10px}
+.chart{width:100%;position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:var(--mono);fill:var(--fg)}
+.lab{font-size:12px}.lab.m{fill:var(--muted)}.lab.b{font-weight:500}.lab.s{font-size:11px}
+.tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);font:400 12px/1.45 var(--mono);padding:8px 10px;border-radius:3px;max-width:280px;z-index:1000;transform:translate(-50%,calc(-100% - 12px));display:none}
+.tip b{font-weight:500}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
+.btn{font:500 12px/1 var(--mono);background:var(--card);color:var(--fg);border:1px solid var(--border);border-radius:3px;padding:8px 10px;cursor:pointer;min-height:36px}
+.btn[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--hot);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:3px;overflow:hidden;max-width:100%;flex-wrap:wrap}
+.seg .btn{border:0;border-radius:0;border-right:1px solid var(--border)}
+.seg .btn:last-child{border-right:0}
+.searchbox{position:relative;flex:1 1 220px;min-width:0}
+input[type=search]{font:400 15px/1 var(--mono);background:var(--card);color:var(--fg);border:1px solid var(--border);border-radius:3px;padding:10px 11px;min-height:40px;width:100%}
+.suggest{position:absolute;left:0;right:0;top:100%;margin:2px 0 0;padding:0;list-style:none;background:var(--card);border:1px solid var(--border);z-index:1003;font:400 13px/1.3 var(--mono);display:none;max-height:340px;overflow:auto}
+.suggest li{padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--rule)}
+.suggest li span{color:var(--muted)}
+.suggest li[aria-selected="true"],.suggest li:hover{background:var(--panel)}
+/* the explorer */
+.explorer{background:var(--card);border:1px solid var(--border);border-top:6px solid var(--hot);padding:14px 14px 12px}
+.ctl-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px 22px;align-items:start}
+@media (max-width:760px){.ctl-grid{grid-template-columns:minmax(0,1fr)}}
+.ctl-l{font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 7px;display:flex;justify-content:space-between;gap:8px}
+.bandval{font:800 clamp(22px,4.4vw,30px)/1.1 var(--display);margin:0 0 4px}
+.bandval small{font:400 13px/1 var(--mono);color:var(--muted);margin-left:6px}
+.range2{position:relative;height:34px;margin:2px 4px 6px}
+.range2 .track{position:absolute;left:0;right:0;top:14px;height:6px;border-radius:3px;background:linear-gradient(90deg,#5E86AD,#C9D7E2 40%,#F3D9A6 55%,#D9774E 75%,#8A2A22)}
+.range2 .sel{position:absolute;top:10px;height:14px;border:2px solid var(--fg);border-radius:4px;pointer-events:none}
+.range2 input{position:absolute;left:-4px;right:-4px;width:calc(100% + 8px);top:4px;margin:0;height:26px;background:none;-webkit-appearance:none;appearance:none;pointer-events:none}
+.range2 input::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:24px;height:24px;border-radius:50%;background:var(--card);border:3px solid var(--fg);cursor:grab}
+.range2 input::-moz-range-thumb{pointer-events:auto;width:18px;height:18px;border-radius:50%;background:var(--card);border:3px solid var(--fg);cursor:grab}
+.range2 input::-webkit-slider-runnable-track{background:none}
+.range2 input::-moz-range-track{background:none}
+.ticks{display:flex;justify-content:space-between;font:400 11px/1 var(--mono);color:var(--muted);margin:0 4px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.presets .btn{min-height:30px;padding:6px 8px;font-size:11.5px}
+.months{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;margin-top:6px}
+.months .btn{padding:7px 0;min-height:32px;font-size:11px;text-align:center}
+.months.off{opacity:.5}
+#lmap{height:600px;border:1px solid var(--border);background:var(--panel);border-radius:2px;margin-top:12px}
+@media (max-width:600px){#lmap{height:440px}}
+.leaflet-container{font:400 12px/1.4 var(--mono);background:var(--panel)}
+.leaflet-bar a,.leaflet-bar a:hover{background:var(--card);color:var(--fg);border-bottom-color:var(--border)}
+.leaflet-control-attribution{background:color-mix(in srgb,var(--card) 85%,transparent)!important;color:var(--muted)}
+.leaflet-control-attribution a{color:var(--fg)}
+.pixel{image-rendering:pixelated}
+.legend{display:flex;gap:4px 12px;flex-wrap:wrap;align-items:center;font:400 12px/1.3 var(--mono);color:var(--muted);margin-top:8px}
+.legend .ramp{display:flex;align-items:center;gap:0}
+.legend .ramp i{display:inline-block;width:20px;height:12px}
+.legend .ramp span{margin:0 6px}
+.legend i.sw{display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-1px;border:1px solid rgba(0,0,0,.08)}
+.live{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:12px 0 0}
+.live div{background:var(--bg);padding:10px 10px}
+.live b{display:block;font:800 clamp(20px,3.8vw,26px)/1.05 var(--display)}
+.live b s{text-decoration:none;color:var(--muted);font:400 13px/1 var(--mono);margin-left:4px}
+.live span{font:400 11.5px/1.35 var(--mono);color:var(--muted);display:block;margin-top:5px}
+@media (max-width:600px){.live{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.place{display:grid;grid-template-columns:minmax(0,1fr) 168px;gap:6px 18px;margin-top:14px;border-top:1px solid var(--rule);padding-top:12px}
+@media (max-width:600px){.place{grid-template-columns:minmax(0,1fr)}.place .ring{max-width:200px;margin:0 auto}}
+.place h3{margin:0 0 2px;font-size:24px}
+.place .c{font:400 12px/1.4 var(--mono);color:var(--muted);margin:0 0 6px}
+.place .say{font-size:16.5px;line-height:1.5;margin:0 0 8px}
+.ring svg{width:100%;height:auto;display:block}
+.pull{font:600 26px/1.25 var(--display);border-left:6px solid var(--hot);padding:4px 0 4px 18px;margin:30px 0}
+.note{background:var(--panel);border:1px solid var(--rule);padding:14px 16px;font-size:16px;margin:22px 0}
+.note h3{margin-top:0}
+table.t{width:100%;border-collapse:collapse;font:400 13px/1.35 var(--mono)}
+table.t th{text-align:left;font-weight:500;color:var(--muted);border-bottom:2px solid var(--fg);padding:6px 8px 6px 0}
+table.t td{border-bottom:1px solid var(--rule);padding:7px 8px 7px 0;vertical-align:top}
+table.t td.num,table.t th.num{text-align:right;white-space:nowrap}
+table.t td small{color:var(--muted);display:block}
+table.t tr.go{cursor:pointer}
+table.t tr.go:hover td{background:var(--panel)}
+.tablewrap{overflow-x:auto}
+@media (max-width:600px){table.t .wide{display:none}}
+.dots{display:inline-flex;gap:2px;vertical-align:middle}
+.dots i{width:7px;height:11px;border-radius:1px;background:var(--rule)}
+.dots i.p{background:var(--band)}
+.dots i.h{background:#D9774E}.dots i.c{background:#B9CCDD}
+.chg.up{color:var(--gain)}.chg.dn{color:var(--loss)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}
+@media (max-width:600px){.cards{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--hot);padding:12px 14px;font:400 13px/1.5 var(--mono);cursor:pointer}
+.card b{font:600 19px/1.2 var(--display);display:block;margin-bottom:2px}
+.card .big{font:900 28px/1.05 var(--display);margin:6px 0 2px}
+.card .big span{color:var(--muted);font:400 13px/1 var(--mono)}
+details{margin:14px 0}
+summary{font:500 13px/1.4 var(--mono);cursor:pointer;color:var(--fg);padding:8px 0}
+.cta{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.cta a{font:500 13px/1 var(--mono);text-decoration:none;border:1px solid var(--fg);padding:11px 14px;border-radius:3px}
+.cta a.p{background:var(--hot);border-color:var(--hot);color:#fff}
+.loading{font:400 13px/1.4 var(--mono);color:var(--muted)}
+footer{border-top:6px double var(--fg);margin-top:56px;padding-top:16px;font:400 13px/1.55 var(--mono);color:var(--muted)}
+footer p{margin:0 0 10px}
+.theme{position:fixed;right:12px;bottom:12px;z-index:1002}
+@media print{.theme,.controls{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kicker"><b>Data study</b><span>Climate</span><span>The world, 1970 to 2060</span></div>
+<header class="hero">
+  <h1>How many months a year are <em>pleasantly warm?</em></h1>
+  <svg class="mark" viewBox="-60 -60 120 120" aria-hidden="true"><g id="heroMark"></g></svg>
+  <p class="dek">Pick your own idea of a pleasant day. This map counts the months in which the average daily high falls inside your band, everywhere on land, for the climate of 1970 to 2000 and for 2041 to 2060. Then search for your city.</p>
+</header>
+<div class="byline">Dr Tristan Hotham, Independent researcher · October 2026 · Data: WorldClim 2.1 and WorldClim CMIP6 (CC BY 4.0); GeoNames (CC BY 4.0)</div>
+
+<div class="stats">
+  <div><b>3.6</b><span>pleasant months a year (highs of 18 to 27 °C) for the average person in a city of 15,000 or more, 1970 to 2000</span></div>
+  <div><b class="h">2.9</b><span>the same for 2041 to 2060, mean of three climate models, a middle emissions path</span></div>
+  <div><b>46%</b><span>of people in these cities lose at least one pleasant month; 14% gain one</span></div>
+  <div><b class="h">14 → 5</b><span>cities of a million or more with twelve pleasant months a year</span></div>
+</div>
+
+<p class="lede">Everyone has a private idea of good weather. Mine is a day warm enough to sit outside without a coat and cool enough to walk across town without wilting. A simple way to put a number on that is the average daily high for each month of the year: the typical warmest point of the day. If it sits between 18 and 27 °C (64 to 81 °F), call the month pleasant. Then count.</p>
+<p>That count makes a surprisingly vivid map. The tropical lowlands are too hot in every month; the far north is too cold in every month; and the pleasant places are a thin and shifting fringe between them, plus a handful of high tropical cities where it is spring all year. But my band is not yours, so the map lets you set the band yourself, swap between the recent past and the middle of this century, and look at one month at a time.</p>
+
+<h2><span class="n">01 · The map</span>Set your band, then look</h2>
+<p>Drag the two handles to set the lowest and highest average daily high you would call pleasant. Switch between the climate of 1970 to 2000, the projection for 2041 to 2060, and the change between them. Or choose <b>One month</b> to see where a single month falls inside your band. Search for a city, or tap the map, to see its year.</p>
+<div class="bleed">
+<div class="explorer" id="explorer">
+  <div class="ctl-grid">
+    <div>
+      <div class="ctl-l"><span>Pleasant average daily high</span><span class="seg" role="group" aria-label="Units"><button class="btn" data-unit="C" aria-pressed="true" style="min-height:24px;padding:4px 7px">°C</button><button class="btn" data-unit="F" aria-pressed="false" style="min-height:24px;padding:4px 7px">°F</button></span></div>
+      <div class="bandval" id="bandval">18 to 27 °C</div>
+      <div class="range2" id="range2">
+        <div class="track"></div><div class="sel" id="rsel"></div>
+        <input type="range" id="rlo" min="-10" max="40" step="1" value="18" aria-label="Lowest pleasant average high">
+        <input type="range" id="rhi" min="-10" max="40" step="1" value="27" aria-label="Highest pleasant average high">
+      </div>
+      <div class="ticks" id="ticks"><span>-10</span><span>0</span><span>10</span><span>20</span><span>30</span><span>40</span></div>
+      <div class="presets" id="presets">
+        <button class="btn" data-b="18,27">18 to 27 (default)</button>
+        <button class="btn" data-b="15,24">Cool: 15 to 24</button>
+        <button class="btn" data-b="21,30">Warm: 21 to 30</button>
+        <button class="btn" data-b="24,32">Beach: 24 to 32</button>
+        <button class="btn" data-b="10,18">Walking: 10 to 18</button>
+      </div>
+    </div>
+    <div>
+      <div class="ctl-l"><span>Climate</span></div>
+      <div class="seg" role="group" aria-label="Period" id="periodBtns">
+        <button class="btn" data-p="now" aria-pressed="true">1970 to 2000</button><button class="btn" data-p="fut" aria-pressed="false">2041 to 2060</button><button class="btn" data-p="chg" aria-pressed="false">Change</button>
+      </div>
+      <div class="ctl-l" style="margin-top:12px"><span>Show</span></div>
+      <div class="seg" role="group" aria-label="View" id="viewBtns">
+        <button class="btn" data-v="count" aria-pressed="true">Pleasant months</button><button class="btn" data-v="month" aria-pressed="false">One month</button>
+      </div>
+      <div class="months off" id="monthBtns" role="group" aria-label="Month"></div>
+      <div class="controls" style="margin:12px 0 0">
+        <div class="searchbox">
+          <input type="search" id="q" placeholder="Search a city" aria-label="Search for a city" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sug">
+          <ul class="suggest" id="sug" role="listbox"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="lmap" role="region" aria-label="World map of pleasant months a year"></div>
+  <div class="legend" id="legend"></div>
+  <div class="live" id="live" aria-live="polite"></div>
+  <div class="place" id="place"><div><p class="loading">Loading the climate grid (about 4 MB)...</p></div><div class="ring"></div></div>
+</div>
+</div>
+<div class="src">Each coloured square is a 20 arc-minute cell (about 37 km across at the equator) on land north of 60° S. The search and the city profiles use the finer 10 arc-minute grid at each city. The numbers in the strip under the map are worked out in your browser for the band and period you have chosen: land shares are weighted by area; "people in cities" means GeoNames cities of 15,000 people or more, weighted by their population, which covers 3.9 billion people, not everyone. Tap the map to see the nearest city's year, or the grid cell's year away from cities. The band moves in steps of 1 °C (1.8 °F). Base map tiles © Esri.</div>
+
+<h2><span class="n">02 · The pleasant fringe</span>A third of the land never gets there</h2>
+<p>With the default band, the average patch of land outside Antarctica gets 2.5 pleasant months a year in the climate of 1970 to 2000. A third of it (34%) gets none at all, and the reasons split two ways: 12% is too cold even at the height of summer, and 22% is too hot even in the coolest month. Only 8% has six or more pleasant months, and 1.4%, about 2.0 million km², has all twelve.</p>
+<p>People are not spread like land. They crowd into the warm middle latitudes and the tropics, so the average person in a city of 15,000 or more gets more pleasant months than the average square kilometre: 3.6. But a fifth of them (21%) live where no month is in the band, almost all because it is too hot: Lagos, Kinshasa, Mumbai, Bangkok, Jakarta and Ho Chi Minh City among the largest.</p>
+<div class="figure">
+  <div class="fig-h">How many pleasant months a year?</div>
+  <div class="fig-sub">Share of land (outside Antarctica) or of people in cities over 15,000 by number of pleasant months, for your band.</div>
+  <div class="controls"><div class="seg" role="group" aria-label="Weight by" id="distW"><button class="btn" data-w="land" aria-pressed="false">Land area</button><button class="btn" data-w="pop" aria-pressed="true">People in cities</button></div></div>
+  <div class="chart" id="dist"></div>
+  <div class="legend"><span><i class="sw" style="background:var(--now)"></i>1970 to 2000</span><span><i class="sw" style="background:var(--fut)"></i>2041 to 2060</span></div>
+</div>
+<p>Where are the pleasant months? Average them by latitude and you get a belt in each hemisphere, between the deserts and the cold. The southern belt is the stronger: with less land and more ocean the southern mid-latitudes have milder seasons, and land between 30 and 35 degrees south (South Africa, Australia, Chile, Argentina, Uruguay) has the most pleasant months of any band of latitude, 5.9 on average.</p>
+<div class="figure">
+  <div class="fig-h">Pleasant months by latitude</div>
+  <div class="fig-sub">Area-weighted mean number of pleasant months on land in each 5 degree band of latitude, for your band.</div>
+  <div class="chart" id="lat"></div>
+  <div class="legend"><span><i class="sw" style="background:var(--now)"></i>1970 to 2000</span><span><i class="sw" style="background:var(--fut)"></i>2041 to 2060</span></div>
+</div>
+
+<h2><span class="n">03 · Spring all year</span>The cities where every month is pleasant</h2>
+<p>Twelve pleasant months need a climate with almost no seasons and a warm but not hot day, and on Earth that mostly means altitude in the tropics. Of the 560 cities of a million people or more, 14 had every month in the band in 1970 to 2000: São Paulo, Lima, Addis Ababa, Caracas, Cali, Medellín, Curitiba and others in Brazil, Mexico, Peru, Madagascar, Rwanda and South Africa. Tap one to see its year.</p>
+<div class="cards" id="yrCards"></div>
+<p>These are also the places where a degree or two matters most. A flat year means every month sits at much the same temperature, so when the whole year warms, months leave the band together. By 2041 to 2060, in the mean of the three models, only 5 of these cities have twelve: Addis Ababa, Medellín and Arequipa keep theirs, and Cape Town and La Paz, cooler today, join them. São Paulo falls from 12 to 8, Lima to 9, Kigali to 4.</p>
+
+<h2><span class="n">04 · The middle of the century</span>Fewer pleasant months, and in different places</h2>
+<p>WorldClim's projections for 2041 to 2060 take three climate models under SSP2-4.5, a middle-of-the-road emissions path, and downscale them to the same grid. In their mean, the average daily high on land outside Antarctica rises by 2.6 °C over the 1970 to 2000 baseline (the three models give 1.6 to 3.8 °C). The pleasant fringe moves with it.</p>
+<p>For people in cities the average falls from 3.6 to 2.9 pleasant months. 46% of them live in a city that loses at least one month and 14% in one that gains, and the share who get none at all rises from 21% to 26%. On land the average falls from 2.5 to 2.2, and the area with all twelve months shrinks from about 2.0 million km² to 1.1 million.</p>
+<p class="pull">Months are lost at the hot end and gained at the cool end. Across the world's cities, the losses win.</p>
+<p>For 65% of people in cities, at least one month that was pleasant becomes too hot; for 40%, at least one month that was too cool becomes pleasant. Many cities do both: the season slides earlier in spring and later in autumn, while the middle of summer leaves the top of the band. In 38 cities of a million or more, one pleasant season splits into two, a spring and an autumn either side of a summer that is now too hot. Paris goes from May to September to May and June, then September and October; Berlin, Toronto, Vienna, Warsaw and Moscow follow the same pattern.</p>
+<div class="figure">
+  <div class="fig-h">Which months are pleasant?</div>
+  <div class="fig-sub">Share of land or of people in cities over 15,000 for whom each calendar month is in your band.</div>
+  <div class="controls"><div class="seg" role="group" aria-label="Weight by" id="monW"><button class="btn" data-w="land" aria-pressed="false">Land area</button><button class="btn" data-w="pop" aria-pressed="true">People in cities</button></div></div>
+  <div class="chart" id="bymonth"></div>
+  <div class="legend"><span><i class="sw" style="background:var(--now)"></i>1970 to 2000</span><span><i class="sw" style="background:var(--fut)"></i>2041 to 2060</span></div>
+</div>
+<p>Most people live in the northern hemisphere, so with the default band May is the most widely pleasant month for city dwellers in 1970 to 2000 (49% of them), and July and August, too hot across much of Asia, the Middle East and the American south, manage about a quarter. By 2041 to 2060 April edges ahead (40%) and July and August fall to 14%.</p>
+
+<h3>Who gains, who loses</h3>
+<p>The biggest losers among big cities are in the tropical highlands and the warm plateaus of Africa and South America, where the year is flat and close to the top of the band: Brasília goes from 9 to 0 pleasant months, Bandung from 8 to 0, Kampala from 9 to 1. The biggest gainers are cooler highland cities: Bogotá, today a little too cool, goes from 3 to 11, and Quito from 0 to 4. Countries with cool summers gain too. People in British cities get 3.2 pleasant months on average now and 4.3 by mid-century; London goes from 4 (June to September) to 5 (May to September).</p>
+<div class="figure">
+  <div class="fig-h">Rankings for your band</div>
+  <div class="fig-sub">Countries with at least 5 million people in GeoNames cities and at least five such cities, by population-weighted pleasant months; or cities of a million or more, with each month now (top row) and in 2041 to 2060 (bottom row): orange pleasant, red too hot, blue too cool. Tap a row to see it on the map.</div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Rank" id="rankWhat"><button class="btn" data-r="ctry" aria-pressed="true">Countries</button><button class="btn" data-r="city" aria-pressed="false">Big cities</button></div>
+    <div class="seg" role="group" aria-label="Order" id="rankBy"><button class="btn" data-o="most" aria-pressed="true">Most months</button><button class="btn" data-o="least" aria-pressed="false">Fewest</button><button class="btn" data-o="loss" aria-pressed="false">Biggest losses</button><button class="btn" data-o="gain" aria-pressed="false">Biggest gains</button></div>
+  </div>
+  <div class="tablewrap"><table class="t" id="rank"></table></div>
+</div>
+
+<h2><span class="n">05 · How much does the band matter?</span>Change the band, keep the story</h2>
+<p>The exact numbers depend on the band, which is why the map lets you move it. The direction does not. I tried seven bands, from a cool 15 to 25 °C to a hot 22 to 32 °C. In every one, the average person in a city loses pleasant months by mid-century, and more people lose than gain.</p>
+<div class="figure">
+  <div class="tablewrap"><table class="t" id="sens"></table></div>
+  <div class="src">Mean pleasant months a year, land area-weighted (outside Antarctica) and city population-weighted, and the share of people in cities whose count falls or rises. Mid-century: mean of three models, SSP2-4.5.</div>
+</div>
+<p>The models disagree about how much, not which way. Under the default band, the share of city dwellers who lose a month is 38% with the coolest of the three models (MPI-ESM1-2-HR) and 50% with the hottest (UKESM1-0-LL), and between 236 and 278 of the 560 big cities lose at least one. The city profiles above shade the range across the three models.</p>
+
+<h2><span class="n">06 · Method and caveats</span>What this map can and cannot say</h2>
+<p><b>Climate now.</b> WorldClim 2.1 monthly averages of daily maximum temperature for 1970 to 2000, on a 10 arc-minute grid (about 18 km at the equator), interpolated from weather stations with elevation and other covariates (Fick and Hijmans 2017). A month is pleasant when its average daily high is within the band, inclusive. The default 18 to 27 °C is my choice, not a standard.</p>
+<p><b>Climate in 2041 to 2060.</b> WorldClim's downscaled CMIP6 projections for three models (MPI-ESM1-2-HR, UKESM1-0-LL and IPSL-CM6A-LR) under SSP2-4.5. I average the three models' monthly highs and count months in the mean; the paper and data also give each model separately. This is three models and one scenario, not the full range of possible futures: UKESM1-0-LL is known as a hot model, and a higher emissions path would move things further. The downscaled grids leave out 6.3% of the land area that the baseline covers (coasts, small islands and lake shores); there I add the change from the nearest covered cell, a median of 19 km away, to the baseline.</p>
+<p><b>Cities.</b> GeoNames lists 34,191 places with 15,000 people or more. Each takes the 10 arc-minute cell nearest to its point (a median of 6.7 km away). For population totals I leave out parts of cities (such as boroughs) and historical places, so that people are not counted twice, which leaves 31,778 cities and 3.9 billion people. GeoNames populations mix city proper and wider municipality definitions (Chongqing's 22 million is a whole municipality), so treat population-weighted figures as indicative.</p>
+<p><b>Limits.</b> A 10 arc-minute grid smooths steep mountains and coasts, so a hillside town or a sea-cooled waterfront can differ from its cell. The baseline is 1970 to 2000; the climate has already warmed since. And this is about afternoon highs only: humidity, rain, wind, sunshine and nights are left out, so a humid 26 °C counts the same as a dry one. "Pleasant" is a convenient label for a temperature band, not a measure of comfort.</p>
+<details><summary>Exact numbers behind the headline figures</summary>
+<p style="font-size:15px">Land outside Antarctica: 585,546 cells of 10 arc-minutes. Share of land with 0 pleasant months: 34.0% now, 36.7% in 2041 to 2060; with 6 or more: 8.1% and 4.9%; with 12: 1.4% and 0.8%. Land gaining at least one month: 21.3%; losing: 35.3%. People in cities with 0 months: 20.5% and 26.2%; with 12: 3.0% and 1.1%. Cities of a million or more: 264 lose, 71 gain and 225 stay the same. The page's map uses a coarser 20 arc-minute grid; at the default band it gives a land average of 2.51 months against 2.51 on the full grid.</p>
+</details>
+
+<h2><span class="n">07 · Sources</span>Data, licences and credits</h2>
+<ul style="font-size:16px">
+<li>Climate 1970 to 2000: WorldClim 2.1, monthly maximum temperature, 10 arc-minutes. Fick, S.E. and Hijmans, R.J. (2017) WorldClim 2: new 1 km spatial resolution climate surfaces for global land areas. <i>International Journal of Climatology</i> 37(12): 4302 to 4315. <a href="https://www.worldclim.org/">worldclim.org</a>, CC BY 4.0.</li>
+<li>Climate 2041 to 2060: WorldClim downscaled CMIP6 data, SSP2-4.5, models MPI-ESM1-2-HR (Max Planck Institute for Meteorology), UKESM1-0-LL (Met Office Hadley Centre and UK partners) and IPSL-CM6A-LR (Institut Pierre-Simon Laplace), from the Coupled Model Intercomparison Project Phase 6 of the World Climate Research Programme. CC BY 4.0.</li>
+<li>Cities: GeoNames cities15000, <a href="https://www.geonames.org/">geonames.org</a>, CC BY 4.0.</li>
+<li>Country outlines for the area-weighted rankings: Natural Earth 1:50m (public domain).</li>
+<li>Base map: Esri World Light Gray and Dark Gray Canvas. Map library: Leaflet.</li>
+</ul>
+<div class="cta"><a class="p" href="https://doi.org/10.5281/zenodo.23732576">Read the paper</a><a href="https://github.com/Tristan-Hotham/pleasant-months">Data and code</a><a href="https://blog.tristanhotham.com/">More data stories</a></div>
+
+<footer>
+  <p>Dr Tristan Hotham, Independent researcher. ORCID 0000-0003-4931-9349. Cite as: Hotham, T. (2026) How many months a year are pleasantly warm? Pleasant months in the climate of 1970 to 2000 and 2041 to 2060 from WorldClim. https://doi.org/10.5281/zenodo.23732576</p>
+  <p>I wrote the text, with drafting and editing assistance from Claude (Anthropic), which also helped prepare the analysis code. I reviewed and checked all text and results.</p>
+  <p>Climate data: WorldClim 2.1 and WorldClim downscaled CMIP6 (Fick and Hijmans 2017), CC BY 4.0. Cities: GeoNames, CC BY 4.0. Countries: Natural Earth (public domain). Base map tiles © Esri.</p>
+  <p>The data files are released under CC BY 4.0, with credit to WorldClim and GeoNames. Text and figures: CC BY 4.0. Code: MIT. Other studies: <a href="https://tristan-hotham.github.io/postbox-kings/">Postbox kings</a>, <a href="https://tristan-hotham.github.io/within-sight/">Within sight</a>, <a href="https://blog.tristanhotham.com/">all posts</a>.</p>
+</footer>
+</div>
+<div class="tip" id="tip"></div>
+<button class="btn theme" id="theme" aria-label="Toggle dark mode">◐</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const R = {"meta":{"lo":18.0,"hi":27.0,"lo_f":64.4,"hi_f":80.6,"models":["MPI-ESM1-2-HR","UKESM1-0-LL","IPSL-CM6A-LR"],"scenario":"SSP2-4.5","cells":585546,"cells_all":808053,"land_km2":141539602.2373792,"filled_cells":41408,"filled_share":0.06292130045866569,"filled_median_km":18.532512664794922,"retrieved_text":"28 October 2026"},"big":{"year_round_now":[{"name":"São Paulo","country":"Brazil","cc":"BR","pop":12400232,"lat":-23.547,"lon":-46.636,"now":12,"fut":8,"change":-4,"pn":"111111111111","pf":"000111111110","pn_txt":"all year","pf_txt":"April to November","tn":[26.4,26.6,25.8,23.8,21.9,21.0,20.7,21.8,22.2,23.5,24.6,25.5],"tf":[28.1,28.2,27.6,25.7,23.8,23.0,22.5,23.7,24.3,26.0,26.8,27.6],"models":[8,7,8]},{"name":"Lima","country":"Peru","cc":"PE","pop":7737002,"lat":-12.043,"lon":-77.028,"now":12,"fut":9,"change":-3,"pn":"111111111111","pf":"000111111111","pn_txt":"all year","pf_txt":"April to December","tn":[25.7,26.6,26.3,24.6,22.3,20.6,19.5,19.1,19.6,21.0,22.4,24.1],"tf":[27.5,28.4,28.1,26.5,24.3,22.6,21.6,21.2,21.8,23.1,24.3,25.9],"models":[10,8,9]},{"name":"Addis Ababa","country":"Ethiopia","cc":"ET","pop":3860000,"lat":9.025,"lon":38.747,"now":12,"fut":12,"change":0,"pn":"111111111111","pf":"111111111111","pn_txt":"all year","pf_txt":"all year","tn":[21.3,22.1,22.9,22.7,22.4,20.9,18.7,18.6,19.8,20.6,20.6,20.6],"tf":[23.0,24.1,24.8,24.6,24.4,22.9,20.5,20.4,21.4,22.0,22.1,22.3],"models":[12,12,12]},{"name":"Caracas","country":"Venezuela","cc":"VE","pop":3000000,"lat":10.488,"lon":-66.879,"now":12,"fut":8,"change":-4,"pn":"111111111111","pf":"111001110011","pn_txt":"all year","pf_txt":"June to August, then November to March","tn":[24.1,24.5,25.3,25.7,25.7,24.9,24.5,24.9,25.6,25.6,24.9,24.2],"tf":[26.0,26.3,27.0,27.4,27.4,26.6,26.1,26.8,27.5,27.6,26.8,26.2],"models":[12,5,8]},{"name":"Cali","country":"Colombia","cc":"CO","pop":2392877,"lat":3.431,"lon":-76.52,"now":12,"fut":6,"change":-6,"pn":"111111111111","pf":"000111000111","pn_txt":"all year","pf_txt":"April to June, then October to December","tn":[25.3,25.4,25.6,25.1,24.9,25.0,25.8,26.0,25.6,24.6,24.4,24.7],"tf":[27.1,27.4,27.4,26.9,26.8,26.9,27.7,28.0,27.6,26.6,26.1,26.4],"models":[10,1,6]},{"name":"Medellín","country":"Colombia","cc":"CO","pop":1999979,"lat":6.245,"lon":-75.572,"now":12,"fut":12,"change":0,"pn":"111111111111","pf":"111111111111","pn_txt":"all year","pf_txt":"all year","tn":[23.5,24.0,24.2,23.8,23.8,23.9,24.4,24.1,23.5,22.8,22.8,22.9],"tf":[25.5,25.9,26.2,25.8,25.7,26.0,26.3,26.1,25.5,24.8,24.5,24.7],"models":[12,12,12]},{"name":"Curitiba","country":"Brazil","cc":"BR","pop":1948626,"lat":-25.428,"lon":-49.273,"now":12,"fut":8,"change":-4,"pn":"111111111111","pf":"000111111110","pn_txt":"all year","pf_txt":"April to November","tn":[26.4,26.4,25.4,23.1,20.7,19.3,19.4,20.9,21.3,22.9,24.5,25.7],"tf":[28.2,28.0,27.1,24.8,22.4,21.0,21.1,22.7,23.1,25.0,26.4,27.6],"models":[9,7,8]},{"name":"Ecatepec de Morelos","country":"Mexico","cc":"MX","pop":1645352,"lat":19.6,"lon":-99.049,"now":12,"fut":9,"change":-3,"pn":"111111111111","pf":"110001111111","pn_txt":"all year","pf_txt":"June to February","tn":[22.3,23.6,26.0,26.9,26.9,24.8,23.4,23.6,23.2,23.2,22.9,22.1],"tf":[24.6,26.0,28.6,29.6,29.3,26.7,25.5,26.1,25.4,25.3,25.1,24.5],"models":[9,8,9]},{"name":"Antananarivo","country":"Madagascar","cc":"MG","pop":1349501,"lat":-18.914,"lon":47.536,"now":12,"fut":5,"change":-7,"pn":"111111111111","pf":"000011111000","pn_txt":"all year","pf_txt":"May to September","tn":[26.0,26.0,25.8,25.2,24.0,21.9,20.2,20.9,22.8,25.0,26.2,26.0],"tf":[28.0,28.0,27.7,27.2,26.1,23.7,21.9,22.5,24.6,27.5,28.5,28.0],"models":[7,5,5]},{"name":"Guarulhos","country":"Brazil","cc":"BR","pop":1345364,"lat":-23.463,"lon":-46.533,"now":12,"fut":10,"change":-2,"pn":"111111111111","pf":"001111111111","pn_txt":"all year","pf_txt":"March to December","tn":[25.3,25.6,24.9,23.0,21.3,20.4,20.1,21.3,21.6,22.8,23.8,24.6],"tf":[27.1,27.2,26.8,25.0,23.3,22.4,22.0,23.3,24.0,25.4,26.1,26.7],"models":[12,8,11]},{"name":"Callao","country":"Peru","cc":"PE","pop":1226200,"lat":-12.052,"lon":-77.135,"now":12,"fut":9,"change":-3,"pn":"111111111111","pf":"000111111111","pn_txt":"all year","pf_txt":"April to December","tn":[25.7,26.6,26.3,24.6,22.3,20.6,19.5,19.1,19.6,21.0,22.4,24.1],"tf":[27.5,28.4,28.1,26.5,24.3,22.6,21.6,21.2,21.8,23.1,24.3,25.9],"models":[10,8,9]},{"name":"Arequipa","country":"Peru","cc":"PE","pop":1195700,"lat":-16.399,"lon":-71.537,"now":12,"fut":12,"change":0,"pn":"111111111111","pf":"111111111111","pn_txt":"all year","pf_txt":"all year","tn":[22.2,21.9,22.1,22.5,22.6,22.1,22.3,22.6,22.9,23.2,23.0,22.7],"tf":[24.2,24.0,24.2,24.6,24.8,24.4,24.7,25.0,25.3,25.4,25.2,24.7],"models":[12,12,12]},{"name":"Kigali","country":"Rwanda","cc":"RW","pop":1132686,"lat":-1.95,"lon":30.059,"now":12,"fut":4,"change":-8,"pn":"111111111111","pf":"000110000011","pn_txt":"all year","pf_txt":"April and May, then November and December","tn":[25.8,25.6,25.4,24.8,24.8,25.5,26.2,26.8,26.7,25.6,24.8,25.1],"tf":[27.3,27.4,27.2,26.5,26.7,27.5,28.2,28.8,28.8,27.9,26.7,26.8],"models":[9,0,5]},{"name":"Gqeberha","country":"South Africa","cc":"ZA","pop":1050078,"lat":-33.961,"lon":25.615,"now":12,"fut":10,"change":-2,"pn":"111111111111","pf":"001111111111","pn_txt":"all year","pf_txt":"March to December","tn":[26.6,26.7,25.4,24.0,22.2,20.5,20.1,20.4,21.2,22.2,23.5,25.3],"tf":[27.9,28.0,26.8,25.5,23.6,22.1,21.6,21.9,22.7,23.7,25.0,26.7],"models":[10,8,10]}]},"sensitivity":[{"lo":15,"hi":25,"land_now":2.3680051157681707,"land_fut":2.0845515605596194,"pop_now":3.2197348968043085,"pop_fut":2.6572999555128516,"pop_loss":0.39461548563130516,"pop_gain":0.1071648982368382,"big_loss":218,"big_gain":69},{"lo":16,"hi":24,"land_now":1.8980019883449604,"land_fut":1.65650624730133,"pop_now":2.6069074763533573,"pop_fut":2.097024372375573,"pop_loss":0.3886356185746649,"pop_gain":0.11519272595059357,"big_loss":219,"big_gain":74},{"lo":18,"hi":27,"land_now":2.5052653261632716,"land_fut":2.1556722451650345,"pop_now":3.642122680015528,"pop_fut":2.9395273222746625,"pop_loss":0.4612345273470833,"pop_gain":0.13704947601300335,"big_loss":264,"big_gain":71},{"lo":20,"hi":30,"land_now":3.72916379272011,"land_fut":2.9819224314597026,"pop_now":4.9614876250919355,"pop_fut":4.145044127079465,"pop_loss":0.5351067396589042,"pop_gain":0.20507500386453995,"big_loss":308,"big_gain":100},{"lo":21,"hi":29,"land_now":2.764944742502675,"land_fut":2.3174832562727423,"pop_now":3.888802316520672,"pop_fut":3.246125394345651,"pop_loss":0.5028403727399278,"pop_gain":0.2223320341133051,"big_loss":299,"big_gain":106},{"lo":18,"hi":24,"land_now":1.5080299745614834,"land_fut":1.3140328226703937,"pop_now":2.13971755791521,"pop_fut":1.7576370665985281,"pop_loss":0.3294297074460764,"pop_gain":0.11189431138319039,"big_loss":187,"big_gain":57},{"lo":22,"hi":32,"land_now":4.717601879715592,"land_fut":3.8497013564460314,"pop_now":5.985851774962768,"pop_fut":5.099295256982887,"pop_loss":0.48355930703902117,"pop_gain":0.29129784826014427,"big_loss":297,"big_gain":133}],"page":{"ncol":1080,"nrow":450,"res":0.3333333333333333,"cells":152078,"ncity":34191,"countries":[{"iso":"ZW","name":"Zimbabwe"},{"iso":"ZM","name":"Zambia"},{"iso":"YE","name":"Yemen"},{"iso":"VN","name":"Vietnam"},{"iso":"VE","name":"Venezuela"},{"iso":"VU","name":"Vanuatu"},{"iso":"UZ","name":"Uzbekistan"},{"iso":"UY","name":"Uruguay"},{"iso":"FM","name":"Micronesia"},{"iso":"MH","name":"Marshall Is."},{"iso":"MP","name":"N. Mariana Is."},{"iso":"VI","name":"U.S. Virgin Is."},{"iso":"GU","name":"Guam"},{"iso":"AS","name":"American Samoa"},{"iso":"PR","name":"Puerto Rico"},{"iso":"US","name":"United States of America"},{"iso":"GS","name":"S. Geo. and the Is."},{"iso":"IO","name":"Br. Indian Ocean Ter."},{"iso":"SH","name":"Saint Helena"},{"iso":"AI","name":"Anguilla"},{"iso":"FK","name":"Falkland Is."},{"iso":"KY","name":"Cayman Is."},{"iso":"VG","name":"British Virgin Is."},{"iso":"MS","name":"Montserrat"},{"iso":"JE","name":"Jersey"},{"iso":"IM","name":"Isle of Man"},{"iso":"GB","name":"United Kingdom"},{"iso":"AE","name":"United Arab Emirates"},{"iso":"UA","name":"Ukraine"},{"iso":"UG","name":"Uganda"},{"iso":"TM","name":"Turkmenistan"},{"iso":"TR","name":"Turkey"},{"iso":"TN","name":"Tunisia"},{"iso":"TT","name":"Trinidad and Tobago"},{"iso":"TO","name":"Tonga"},{"iso":"TG","name":"Togo"},{"iso":"TL","name":"Timor-Leste"},{"iso":"TH","name":"Thailand"},{"iso":"TZ","name":"Tanzania"},{"iso":"TJ","name":"Tajikistan"},{"iso":"CN-TW","name":"Taiwan"},{"iso":"SY","name":"Syria"},{"iso":"CH","name":"Switzerland"},{"iso":"SE","name":"Sweden"},{"iso":"SZ","name":"eSwatini"},{"iso":"SR","name":"Suriname"},{"iso":"SS","name":"S. Sudan"},{"iso":"SD","name":"Sudan"},{"iso":"LK","name":"Sri Lanka"},{"iso":"ES","name":"Spain"},{"iso":"KR","name":"South Korea"},{"iso":"ZA","name":"South Africa"},{"iso":"SO","name":"Somalia"},{"iso":"","name":"Somaliland"},{"iso":"SB","name":"Solomon Is."},{"iso":"SK","name":"Slovakia"},{"iso":"SI","name":"Slovenia"},{"iso":"SG","name":"Singapore"},{"iso":"SL","name":"Sierra Leone"},{"iso":"SC","name":"Seychelles"},{"iso":"RS","name":"Serbia"},{"iso":"SN","name":"Senegal"},{"iso":"SA","name":"Saudi Arabia"},{"iso":"ST","name":"São Tomé and Principe"},{"iso":"WS","name":"Samoa"},{"iso":"VC","name":"St. Vin. and Gren."},{"iso":"LC","name":"Saint Lucia"},{"iso":"RW","name":"Rwanda"},{"iso":"RU","name":"Russia"},{"iso":"RO","name":"Romania"},{"iso":"QA","name":"Qatar"},{"iso":"PT","name":"Portugal"},{"iso":"PL","name":"Poland"},{"iso":"PH","name":"Philippines"},{"iso":"PE","name":"Peru"},{"iso":"PY","name":"Paraguay"},{"iso":"PG","name":"Papua New Guinea"},{"iso":"PA","name":"Panama"},{"iso":"PW","name":"Palau"},{"iso":"PK","name":"Pakistan"},{"iso":"OM","name":"Oman"},{"iso":"NO","name":"Norway"},{"iso":"KP","name":"North Korea"},{"iso":"NG","name":"Nigeria"},{"iso":"NE","name":"Niger"},{"iso":"NI","name":"Nicaragua"},{"iso":"NZ","name":"New Zealand"},{"iso":"NU","name":"Niue"},{"iso":"NL","name":"Netherlands"},{"iso":"AW","name":"Aruba"},{"iso":"CW","name":"Curaçao"},{"iso":"NP","name":"Nepal"},{"iso":"NA","name":"Namibia"},{"iso":"MZ","name":"Mozambique"},{"iso":"MA","name":"Morocco"},{"iso":"EH","name":"W. Sahara"},{"iso":"ME","name":"Montenegro"},{"iso":"MN","name":"Mongolia"},{"iso":"MD","name":"Moldova"},{"iso":"MX","name":"Mexico"},{"iso":"MU","name":"Mauritius"},{"iso":"MR","name":"Mauritania"},{"iso":"MT","name":"Malta"},{"iso":"ML","name":"Mali"},{"iso":"MY","name":"Malaysia"},{"iso":"MW","name":"Malawi"},{"iso":"MG","name":"Madagascar"},{"iso":"MK","name":"North Macedonia"},{"iso":"LU","name":"Luxembourg"},{"iso":"LT","name":"Lithuania"},{"iso":"LY","name":"Libya"},{"iso":"LR","name":"Liberia"},{"iso":"LS","name":"Lesotho"},{"iso":"LB","name":"Lebanon"},{"iso":"LV","name":"Latvia"},{"iso":"LA","name":"Laos"},{"iso":"KG","name":"Kyrgyzstan"},{"iso":"KW","name":"Kuwait"},{"iso":"XK","name":"Kosovo"},{"iso":"KI","name":"Kiribati"},{"iso":"KE","name":"Kenya"},{"iso":"KZ","name":"Kazakhstan"},{"iso":"JO","name":"Jordan"},{"iso":"JP","name":"Japan"},{"iso":"JM","name":"Jamaica"},{"iso":"IT","name":"Italy"},{"iso":"IL","name":"Israel"},{"iso":"PS","name":"Palestine"},{"iso":"IE","name":"Ireland"},{"iso":"IQ","name":"Iraq"},{"iso":"IR","name":"Iran"},{"iso":"ID","name":"Indonesia"},{"iso":"IN","name":"India"},{"iso":"IS","name":"Iceland"},{"iso":"HU","name":"Hungary"},{"iso":"HN","name":"Honduras"},{"iso":"HT","name":"Haiti"},{"iso":"GY","name":"Guyana"},{"iso":"GW","name":"Guinea-Bissau"},{"iso":"GN","name":"Guinea"},{"iso":"GT","name":"Guatemala"},{"iso":"GD","name":"Grenada"},{"iso":"GR","name":"Greece"},{"iso":"GH","name":"Ghana"},{"iso":"DE","name":"Germany"},{"iso":"GE","name":"Georgia"},{"iso":"GM","name":"Gambia"},{"iso":"GA","name":"Gabon"},{"iso":"FR","name":"France"},{"iso":"PM","name":"St. Pierre and Miquelon"},{"iso":"BL","name":"St-Barthélemy"},{"iso":"PF","name":"Fr. Polynesia"},{"iso":"NC","name":"New Caledonia"},{"iso":"TF","name":"Fr. S. Antarctic Lands"},{"iso":"AX","name":"Åland"},{"iso":"FI","name":"Finland"},{"iso":"FJ","name":"Fiji"},{"iso":"ET","name":"Ethiopia"},{"iso":"EE","name":"Estonia"},{"iso":"ER","name":"Eritrea"},{"iso":"GQ","name":"Eq. Guinea"},{"iso":"SV","name":"El Salvador"},{"iso":"EG","name":"Egypt"},{"iso":"EC","name":"Ecuador"},{"iso":"DO","name":"Dominican Rep."},{"iso":"DM","name":"Dominica"},{"iso":"DJ","name":"Djibouti"},{"iso":"GL","name":"Greenland"},{"iso":"FO","name":"Faeroe Is."},{"iso":"DK","name":"Denmark"},{"iso":"CZ","name":"Czechia"},{"iso":"","name":"N. Cyprus"},{"iso":"CY","name":"Cyprus"},{"iso":"CU","name":"Cuba"},{"iso":"HR","name":"Croatia"},{"iso":"CI","name":"Côte d'Ivoire"},{"iso":"CR","name":"Costa Rica"},{"iso":"CD","name":"Dem. Rep. Congo"},{"iso":"CG","name":"Congo"},{"iso":"KM","name":"Comoros"},{"iso":"CO","name":"Colombia"},{"iso":"CN","name":"China"},{"iso":"HK","name":"Hong Kong"},{"iso":"CL","name":"Chile"},{"iso":"TD","name":"Chad"},{"iso":"CF","name":"Central African Rep."},{"iso":"CV","name":"Cabo Verde"},{"iso":"CA","name":"Canada"},{"iso":"CM","name":"Cameroon"},{"iso":"KH","name":"Cambodia"},{"iso":"MM","name":"Myanmar"},{"iso":"BI","name":"Burundi"},{"iso":"BF","name":"Burkina Faso"},{"iso":"BG","name":"Bulgaria"},{"iso":"BN","name":"Brunei"},{"iso":"BR","name":"Brazil"},{"iso":"BW","name":"Botswana"},{"iso":"BA","name":"Bosnia and Herz."},{"iso":"BO","name":"Bolivia"},{"iso":"BT","name":"Bhutan"},{"iso":"BJ","name":"Benin"},{"iso":"BZ","name":"Belize"},{"iso":"BE","name":"Belgium"},{"iso":"BY","name":"Belarus"},{"iso":"BB","name":"Barbados"},{"iso":"BD","name":"Bangladesh"},{"iso":"BH","name":"Bahrain"},{"iso":"BS","name":"Bahamas"},{"iso":"AZ","name":"Azerbaijan"},{"iso":"AT","name":"Austria"},{"iso":"AU","name":"Australia"},{"iso":"HM","name":"Heard I. and McDonald Is."},{"iso":"AM","name":"Armenia"},{"iso":"AR","name":"Argentina"},{"iso":"AG","name":"Antigua and Barb."},{"iso":"AO","name":"Angola"},{"iso":"DZ","name":"Algeria"},{"iso":"AL","name":"Albania"},{"iso":"AF","name":"Afghanistan"},{"iso":"","name":"Siachen Glacier"}],"check":{"mean_now":2.5109950740015234,"mean_fut":2.1583416497401933,"ge6_now":0.08086910520635487,"zero_now":0.33910861880893817}}};
+const NS = "http://www.w3.org/2000/svg";
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const el = (t, a = {}, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+const fmt = n => n == null ? "n/a" : Math.round(n).toLocaleString("en-GB");
+const pc = (x, d = 0) => (x * 100).toFixed(d) + "%";
+const f1 = x => x.toFixed(1);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const tip = document.getElementById("tip");
+function showTip(h, x, y) { tip.innerHTML = h; tip.style.display = "block"; const w = tip.offsetWidth; x = Math.max(w / 2 + 8, Math.min(innerWidth - w / 2 - 8, x)); tip.style.left = x + scrollX + "px"; tip.style.top = y + scrollY + "px"; }
+function hideTip() { tip.style.display = "none"; }
+function hover(node, h) { node.style.cursor = "pointer"; const s = () => { const r = node.getBoundingClientRect(); showTip(typeof h === "function" ? h() : h, r.left + r.width / 2, r.top); }; node.addEventListener("pointerenter", s); node.addEventListener("pointerleave", hideTip); node.addEventListener("click", e => { s(); e.stopPropagation(); }); }
+document.addEventListener("click", hideTip);
+const redraws = [];
+function resp(box, render) { let last = 0; const go = (force) => { const w = Math.max(280, Math.round(box.clientWidth)); if (!force && Math.abs(w - last) < 4) return; last = w; box.innerHTML = ""; render(w, w < 560); }; new ResizeObserver(() => go()).observe(box); go(); redraws.push(() => go(true)); return () => go(true); }
+const lbl = (svg, x, y, s, cls = "lab", anchor = "start") => { const t = el("text", { x, y, class: cls, "text-anchor": anchor }, svg); t.textContent = s; return t; };
+const isDark = () => { const r = document.documentElement; return r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; };
+
+/* ---------- colours ---------- */
+const MCOL = ["#F7E6BE", "#F3D6A0", "#EFC585", "#EAB16C", "#E49D57", "#DC8746", "#D0723A", "#C05E32", "#AC4C2D", "#953E2A", "#7C3227", "#612622"]; // 1..12
+const ZCOLD = "#C7D5E2", ZHOT = "#D9C3D3", ZBOTH = "#E2DCD2";
+const CHG = { "-6": "#5E1F3D", "-5": "#6E2747", "-4": "#7F3152", "-3": "#985072", "-2": "#B67C97", "-1": "#D7B2C2", "0": "#E6E1D8", "1": "#B3D6D3", "2": "#82BDB9", "3": "#57A19E", "4": "#348583", "5": "#216C6B", "6": "#155756" };
+const MCOLD = ["#C6D6E4", "#9FBAD2", "#7E9FBF", "#6185AA", "#476B92"]; // within 3, 6, 10, 15, more degrees below
+const MPLEAS = "#E39A3B";
+const MHOT = ["#E6A48E", "#D7735B", "#B94A3A", "#8C2A25"]; // within 3, 6, 10, more above
+const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const pack = (h, a = 255) => { const [r, g, b] = hex(h); return (a << 24) | (b << 16) | (g << 8) | r; };
+// LUT: 0 transparent; 1..12 months; 13 zero cold; 14 zero hot; 15 zero other; 16..28 change -6..6; 29 none in either period;
+// 30..34 month cold; 35 month pleasant; 36..39 month hot
+const LUT = new Uint32Array(40);
+for (let k = 1; k <= 12; k++) LUT[k] = pack(MCOL[k - 1]);
+LUT[13] = pack(ZCOLD); LUT[14] = pack(ZHOT); LUT[15] = pack(ZBOTH);
+for (let d = -6; d <= 6; d++) LUT[22 + d] = pack(CHG[d]);
+LUT[29] = pack("#FBF8F2");
+MCOLD.forEach((c, i) => LUT[30 + i] = pack(c)); LUT[35] = pack(MPLEAS); MHOT.forEach((c, i) => LUT[36 + i] = pack(c));
+
+/* hero mark: twelve months as a ring */
+(function () { const g = document.getElementById("heroMark"); for (let m = 0; m < 12; m++) { const a0 = (m / 12) * 2 * Math.PI - Math.PI / 2, a1 = ((m + 1) / 12) * 2 * Math.PI - Math.PI / 2 - 0.06; const r0 = 30, r1 = 56; const p = `M${r1 * Math.cos(a0)} ${r1 * Math.sin(a0)}A${r1} ${r1} 0 0 1 ${r1 * Math.cos(a1)} ${r1 * Math.sin(a1)}L${r0 * Math.cos(a1)} ${r0 * Math.sin(a1)}A${r0} ${r0} 0 0 0 ${r0 * Math.cos(a0)} ${r0 * Math.sin(a0)}Z`; el("path", { d: p, fill: [ZCOLD, ZCOLD, MCOL[1], MCOL[4], MCOL[7], MCOL[10], MCOL[11], MCOL[10], MCOL[7], MCOL[4], MCOL[1], ZCOLD][m] }, g); } el("circle", { r: 20, fill: "var(--hot)" }, g); })();
+
+/* ---------- state ---------- */
+const S = { lo: 18, hi: 27, unit: "C", period: "now", view: "count", month: 6, distW: "pop", monW: "pop", rank: "ctry", order: "most", sel: null };
+try { const h = new URLSearchParams(location.hash.slice(1)); if (h.has("lo") && h.has("hi")) { const lo = +h.get("lo"), hi = +h.get("hi"); if (lo >= -10 && hi <= 40 && lo <= hi) { S.lo = lo; S.hi = hi; } } if (["now", "fut", "chg"].includes(h.get("p"))) S.period = h.get("p"); if (h.get("v") === "month") S.view = "month"; if (h.has("m")) { const m = +h.get("m"); if (m >= 0 && m < 12) S.month = m; } if (h.get("u") === "F") S.unit = "F"; } catch (e) { }
+const toF = c => c * 9 / 5 + 32;
+const tU = (c, d = 0) => S.unit === "F" ? (toF(c)).toFixed(d) + " °F" : (+c).toFixed(d) + " °C";
+const bandText = () => S.unit === "F" ? `${Math.round(toF(S.lo))} to ${Math.round(toF(S.hi))} °F` : `${S.lo} to ${S.hi} °C`;
+
+/* ---------- data ---------- */
+async function inflate(buf) { const u = new Uint8Array(buf); if (u[0] === 0x1f && u[1] === 0x8b) { const s = new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip")); return new Uint8Array(await new Response(s).arrayBuffer()); } return u; }
+const G = { ncol: R.page.ncol, nrow: R.page.nrow, n: R.page.cells };
+const CT = {};
+let ready = false;
+async function load() {
+  const [gb, cj, cb] = await Promise.all([fetch("data/page/grid20.bin.gz").then(r => r.arrayBuffer()).then(inflate), fetch("data/page/cities.json").then(r => r.json()), fetch("data/page/cities_t.bin.gz").then(r => r.arrayBuffer()).then(inflate)]);
+  const NC = G.ncol, NR = G.nrow, n = G.n, mb = Math.ceil(NC * NR / 8);
+  G.idx = new Int32Array(NC * NR).fill(-1); G.row = new Uint16Array(n);
+  let k = 0; for (let p = 0; p < NC * NR; p++) { if (gb[p >> 3] & (128 >> (p & 7))) { G.idx[p] = k; G.row[k] = Math.floor(p / NC); k++; } }
+  let o = mb; G.nsub = gb.subarray(o, o + n); o += n; G.ctry = gb.subarray(o, o + n); o += n;
+  const dec = (off) => { const out = new Int8Array(12 * n); const d = new Int8Array(gb.buffer, gb.byteOffset + off, 12 * n); for (let m = 0; m < 12; m++) { let acc = 0; const b = m * n; for (let i = 0; i < n; i++) { acc = ((acc + d[b + i]) << 24) >> 24; out[b + i] = acc; } } return out; };
+  G.now = dec(o); o += 12 * n; G.fut = dec(o);
+  G.w = new Float64Array(n); for (let i = 0; i < n; i++) { const lat = 90 - (G.row[i] + .5) / 3; G.w[i] = Math.cos(lat * Math.PI / 180) * G.nsub[i]; }
+  G.wsum = G.w.reduce((a, b) => a + b, 0);
+  for (const s of ["now", "fut"]) { const c = G[s], mn = new Int8Array(n).fill(127), mx = new Int8Array(n).fill(-128); for (let m = 0; m < 12; m++) for (let i = 0; i < n; i++) { const v = c[m * n + i]; if (v < mn[i]) mn[i] = v; if (v > mx[i]) mx[i] = v; } G[s + "Min"] = mn; G[s + "Max"] = mx; }
+  G.cntNow = new Uint8Array(n); G.cntFut = new Uint8Array(n);
+  // cities
+  CT.cc = cj.cc; CT.country = cj.country; CT.rows = cj.rows; const N = cj.rows.length; CT.n = N;
+  CT.tn = new Int16Array(cb.buffer.slice(cb.byteOffset, cb.byteOffset + N * 24)); CT.tf = new Int16Array(cb.buffer.slice(cb.byteOffset + N * 24, cb.byteOffset + N * 48));
+  CT.md = new Int8Array(cb.buffer.slice(cb.byteOffset + N * 48, cb.byteOffset + N * 48 + N * 36));
+  CT.cntNow = new Uint8Array(N); CT.cntFut = new Uint8Array(N);
+  CT.norm = cj.rows.map(r => r[0].normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase());
+  ready = true; update(true);
+  const start = findCity("London", "GB"); select({ type: "city", i: start }, false);
+}
+
+/* ---------- counting ---------- */
+function compute() {
+  const n = G.n, lo2 = 2 * S.lo, hi2 = 2 * S.hi;
+  for (const s of ["now", "fut"]) { const c = G[s], out = s === "now" ? G.cntNow : G.cntFut; out.fill(0); for (let m = 0; m < 12; m++) { const b = m * n; for (let i = 0; i < n; i++) { const v = c[b + i]; if (v >= lo2 && v <= hi2) out[i]++; } } }
+  const N = CT.n, lo = S.lo * 10, hi = S.hi * 10;
+  for (const s of ["now", "fut"]) { const t = s === "now" ? CT.tn : CT.tf, out = s === "now" ? CT.cntNow : CT.cntFut; for (let i = 0; i < N; i++) { let k = 0; for (let m = 0; m < 12; m++) { const v = t[i * 12 + m]; if (v >= lo && v <= hi) k++; } out[i] = k; } }
+}
+function cellValue(i) {
+  if (S.view === "month") { const c = (S.period === "fut" ? G.fut : G.now)[S.month * G.n + i]; const lo2 = 2 * S.lo, hi2 = 2 * S.hi; if (c < lo2) { const d = (lo2 - c) / 2; return 30 + (d <= 3 ? 0 : d <= 6 ? 1 : d <= 10 ? 2 : d <= 15 ? 3 : 4); } if (c > hi2) { const d = (c - hi2) / 2; return 36 + (d <= 3 ? 0 : d <= 6 ? 1 : d <= 10 ? 2 : 3); } return 35; }
+  if (S.period === "chg") { const a = G.cntNow[i], b = G.cntFut[i]; if (a === 0 && b === 0) return 29; return 22 + Math.max(-6, Math.min(6, b - a)); }
+  const s = S.period, k = (s === "now" ? G.cntNow : G.cntFut)[i]; if (k > 0) return k;
+  if (G[s + "Max"][i] < 2 * S.lo) return 13; if (G[s + "Min"][i] > 2 * S.hi) return 14; return 15;
+}
+
+/* ---------- map ---------- */
+const map = L.map("lmap", { worldCopyJump: true, minZoom: 1, maxZoom: 8, zoomSnap: .5, scrollWheelZoom: false }).setView([25, 10], innerWidth < 600 ? 1 : 2);
+map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
+map.on("click", () => map.scrollWheelZoom.enable());
+map.createPane("labels"); map.getPane("labels").style.zIndex = 450; map.getPane("labels").style.pointerEvents = "none";
+let base, ref;
+function basemap() { if (base) map.removeLayer(base); if (ref) map.removeLayer(ref); const t = isDark() ? "Dark" : "Light"; base = L.tileLayer(`https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${t}_Gray_Base/MapServer/tile/{z}/{y}/{x}`, { attribution: "Tiles © Esri", maxZoom: 16, zIndex: 1 }).addTo(map); ref = L.tileLayer(`https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${t}_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, { pane: "labels", maxZoom: 16 }).addTo(map); }
+basemap();
+const tiles = new Set();
+const Grid = L.GridLayer.extend({
+  createTile(coords) {
+    const c = document.createElement("canvas"); c.width = c.height = 256; c.className = "pixel";
+    c._coords = coords; tiles.add(c); if (ready) paint(c); return c;
+  }
+});
+const glayer = new Grid({ opacity: .9, updateWhenZooming: false, keepBuffer: 1, zIndex: 5 }).addTo(map);
+glayer.on("tileunload", e => tiles.delete(e.tile));
+function tileIndex(c) {
+  if (c._idx) return c._idx;
+  const { x, y, z } = c._coords, nT = 1 << z, xx = ((x % nT) + nT) % nT, sc = 256 * nT;
+  const cols = new Int32Array(256), rows = new Int32Array(256);
+  for (let p = 0; p < 256; p++) { const lon = (xx * 256 + p + .5) / sc * 360 - 180; cols[p] = Math.min(G.ncol - 1, Math.floor((lon + 180) * 3)); const Y = (y * 256 + p + .5) / sc; const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * Y))) * 180 / Math.PI; const r = Math.floor((90 - lat) * 3); rows[p] = r >= 0 && r < G.nrow ? r : -1; }
+  const idx = new Int32Array(65536);
+  for (let py = 0; py < 256; py++) { const r = rows[py]; for (let px = 0; px < 256; px++) idx[py * 256 + px] = r < 0 ? -1 : G.idx[r * G.ncol + cols[px]]; }
+  c._idx = idx; return idx;
+}
+let vals = null;
+function paint(c) {
+  const idx = tileIndex(c), ctx = c.getContext("2d"), im = ctx.createImageData(256, 256), u = new Uint32Array(im.data.buffer);
+  for (let k = 0; k < 65536; k++) { const i = idx[k]; u[k] = i < 0 ? 0 : LUT[vals[i]]; }
+  ctx.putImageData(im, 0, 0);
+}
+const NONE2 = () => isDark() ? "#3A332C" : "#FBF8F2";
+function repaint() { LUT[29] = pack(NONE2()); vals = vals && vals.length === G.n ? vals : new Uint8Array(G.n); for (let i = 0; i < G.n; i++) vals[i] = cellValue(i); tiles.forEach(paint); }
+let marker = null;
+map.on("click", e => {
+  if (!ready) return; const { lat, lng } = e.latlng; const lon = ((lng + 540) % 360) - 180;
+  const j = nearestCity(lat, lon, 25); if (j >= 0) return select({ type: "city", i: j }, false);
+  const r = Math.floor((90 - lat) * 3), col = Math.floor((lon + 180) * 3); const i = r >= 0 && r < G.nrow ? G.idx[r * G.ncol + col] : -1;
+  if (i >= 0) select({ type: "cell", i, lat, lon }, false);
+});
+
+/* ---------- legend and live numbers ---------- */
+function legend() {
+  const LG = document.getElementById("legend"); let h = "";
+  if (S.view === "month") { h = `<span>${MONTHS[S.month]}, ${S.period === "fut" ? "2041 to 2060" : "1970 to 2000"}:</span><span class="ramp">${MCOLD.slice().reverse().map(c => `<i style="background:${c}"></i>`).join("")}<span>too cool</span></span><span><i class="sw" style="background:${MPLEAS}"></i>pleasant</span><span class="ramp"><span>too hot</span>${MHOT.map(c => `<i style="background:${c}"></i>`).join("")}</span><span>(darker: further from the band, in steps of 3, 6, 10 and 15 degrees)</span>`; }
+  else if (S.period === "chg") { h = `<span>Change in pleasant months, 1970 to 2000 to 2041 to 2060:</span><span class="ramp"><span>6 fewer</span>${[-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6].map(d => `<i style="background:${CHG[d]}"></i>`).join("")}<span>6 more</span></span><span><i class="sw" style="background:${NONE2()}"></i>none in either period</span>`; }
+  else { h = `<span>Pleasant months a year:</span><span class="ramp"><span>1</span>${MCOL.map(c => `<i style="background:${c}"></i>`).join("")}<span>12</span></span><span><i class="sw" style="background:${ZCOLD}"></i>none: too cool all year</span><span><i class="sw" style="background:${ZHOT}"></i>none: too hot all year</span>`; }
+  LG.innerHTML = h;
+}
+function stats() {
+  const n = G.n; let a = 0, b = 0, z = 0, z2 = 0, s6 = 0, s62 = 0;
+  for (let i = 0; i < n; i++) { const w = G.w[i]; a += w * G.cntNow[i]; b += w * G.cntFut[i]; if (!G.cntNow[i]) z += w; if (!G.cntFut[i]) z2 += w; if (G.cntNow[i] >= 6) s6 += w; if (G.cntFut[i] >= 6) s62 += w; }
+  let P = 0, pa = 0, pb = 0, loss = 0, gain = 0, pz = 0, pz2 = 0;
+  for (let i = 0; i < CT.n; i++) { const r = CT.rows[i]; if (!r[5]) continue; const p = r[4]; P += p; pa += p * CT.cntNow[i]; pb += p * CT.cntFut[i]; if (CT.cntFut[i] < CT.cntNow[i]) loss += p; else if (CT.cntFut[i] > CT.cntNow[i]) gain += p; if (!CT.cntNow[i]) pz += p; if (!CT.cntFut[i]) pz2 += p; }
+  const W = G.wsum;
+  document.getElementById("live").innerHTML = `
+  <div><b>${f1(pa / P)}<s>→ ${f1(pb / P)}</s></b><span>pleasant months a year for the average person in a city, now → 2041 to 2060</span></div>
+  <div><b>${f1(a / W)}<s>→ ${f1(b / W)}</s></b><span>pleasant months on the average patch of land (outside Antarctica)</span></div>
+  <div><b>${pc(loss / P)}<s>/ ${pc(gain / P)}</s></b><span>of people in cities lose / gain at least one pleasant month</span></div>
+  <div><b>${pc(pz / P)}<s>→ ${pc(pz2 / P)}</s></b><span>of people in cities have no pleasant month at all</span></div>`;
+}
+
+/* ---------- city search ---------- */
+function findCity(name, cc) { const k = CT.cc.indexOf(cc); for (let i = 0; i < CT.n; i++) if (CT.rows[i][0] === name && CT.rows[i][1] === k) return i; return 0; }
+function nearestCity(lat, lon, km) { let best = -1, bd = km; const cl = Math.cos(lat * Math.PI / 180); for (let i = 0; i < CT.n; i++) { const r = CT.rows[i]; const dy = (r[2] - lat) * 111.2; if (Math.abs(dy) > bd) continue; let dx = r[3] - lon; if (dx > 180) dx -= 360; if (dx < -180) dx += 360; dx *= 111.2 * cl; const d = Math.hypot(dx, dy); if (d < bd) { bd = d; best = i; } } return best; }
+const q = document.getElementById("q"), sug = document.getElementById("sug"); let hits = [], act = -1;
+function suggest() {
+  const v = q.value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim(); hits = []; act = -1;
+  if (v.length < 2 || !ready) { sug.style.display = "none"; q.setAttribute("aria-expanded", "false"); return; }
+  for (let i = 0; i < CT.n && hits.length < 200; i++) { const s = CT.norm[i]; if (s.startsWith(v)) hits.push([0, i]); else if (v.length > 2 && s.includes(v)) hits.push([1, i]); }
+  hits.sort((a, b) => a[0] - b[0] || CT.rows[b[1]][4] - CT.rows[a[1]][4]); hits = hits.slice(0, 8).map(h => h[1]);
+  sug.innerHTML = hits.map((i, k) => `<li role="option" data-i="${i}" aria-selected="false">${esc(CT.rows[i][0])} <span>${esc(CT.country[CT.rows[i][1]])} · ${fmt(CT.rows[i][4])}</span></li>`).join("") || `<li aria-disabled="true"><span>No city of 15,000 people or more matches</span></li>`;
+  sug.style.display = "block"; q.setAttribute("aria-expanded", "true");
+}
+q.addEventListener("input", suggest);
+q.addEventListener("keydown", e => { const li = [...sug.querySelectorAll("li[data-i]")]; if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); act = Math.max(0, Math.min(li.length - 1, act + (e.key === "ArrowDown" ? 1 : -1))); li.forEach((x, k) => x.setAttribute("aria-selected", k === act)); } else if (e.key === "Enter") { e.preventDefault(); const i = li[Math.max(0, act)]; if (i) pick(+i.dataset.i); } else if (e.key === "Escape") { sug.style.display = "none"; } });
+sug.addEventListener("click", e => { const li = e.target.closest("li[data-i]"); if (li) pick(+li.dataset.i); });
+function pick(i) { sug.style.display = "none"; q.value = CT.rows[i][0]; q.setAttribute("aria-expanded", "false"); select({ type: "city", i }, true); }
+document.addEventListener("click", e => { if (!e.target.closest(".searchbox")) sug.style.display = "none"; });
+
+/* ---------- the place panel ---------- */
+function profileOf(sel) {
+  if (sel.type === "city") { const i = sel.i, r = CT.rows[i]; const now = [], fut = [], lo = [], hi = []; for (let m = 0; m < 12; m++) { now.push(CT.tn[i * 12 + m] / 10); const f = CT.tf[i * 12 + m] / 10; fut.push(f); let a = f, b = f; for (let j = 0; j < 3; j++) { const v = f + CT.md[i * 36 + j * 12 + m] / 10; a = Math.min(a, v); b = Math.max(b, v); } lo.push(a); hi.push(b); } return { name: r[0], sub: `${CT.country[r[1]]} · population ${fmt(r[4])} · ${r[2].toFixed(2)}, ${r[3].toFixed(2)}`, lat: r[2], lon: r[3], now, fut, lo, hi, exact: true }; }
+  const dec = c => c % 2 === 0 ? c / 2 : (c + 1) / 2 - .5; const i = sel.i, now = [], fut = []; for (let m = 0; m < 12; m++) { now.push(dec(G.now[m * G.n + i])); fut.push(dec(G.fut[m * G.n + i])); }
+  return { name: "Grid cell", sub: `Around ${sel.lat.toFixed(2)}, ${sel.lon.toFixed(2)} · 20 arc-minute cell, values to the nearest half degree`, lat: sel.lat, lon: sel.lon, now, fut, lo: null, hi: null, exact: false };
+}
+function monthsText(mask) { if (mask.every(Boolean)) return "all year"; if (!mask.some(Boolean)) return "none"; const start = mask.findIndex(x => !x); const parts = []; let i = 0; while (i < 12) { const j = (start + i) % 12; if (mask[j]) { let k = i; while (k + 1 < 12 && mask[(start + k + 1) % 12]) k++; const a = MONTHS[j], b = MONTHS[(start + k) % 12]; parts.push(k === i ? a : k === i + 1 ? `${a} and ${b}` : `${a} to ${b}`); i = k + 1; } else i++; } return parts.join(", then "); }
+const inb = t => t >= S.lo && t <= S.hi;
+function select(sel, fly) {
+  S.sel = sel; const P = profileOf(sel);
+  if (marker) map.removeLayer(marker); marker = L.circleMarker([P.lat, P.lon], { radius: 7, color: "#231C16", weight: 2.5, fillColor: "#fff", fillOpacity: 1 }).addTo(map);
+  if (fly) { const el = document.getElementById("lmap").getBoundingClientRect(); if (el.top < 0 || el.bottom > innerHeight) document.getElementById("explorer").scrollIntoView({ behavior: "smooth", block: "start" }); map.flyTo([P.lat, P.lon], Math.max(map.getZoom(), 4), { duration: .8 }); }
+  drawPlace();
+}
+function drawPlace() {
+  if (!S.sel) return; const P = profileOf(S.sel); const box = document.getElementById("place");
+  const mn = P.now.map(inb), mf = P.fut.map(inb); const kn = mn.filter(Boolean).length, kf = mf.filter(Boolean).length;
+  const why = (t, k) => k ? "" : Math.max(...t) < S.lo ? " (too cool all year)" : Math.min(...t) > S.hi ? " (too hot all year)" : "";
+  let models = ""; if (P.lo) { const i = S.sel.i, ks = [0, 1, 2].map(j => { let k = 0; for (let m = 0; m < 12; m++) { const v = (CT.tf[i * 12 + m] + CT.md[i * 36 + j * 12 + m]) / 10; if (inb(v)) k++; } return k; }); models = ` The three models give ${ks[0]}, ${ks[1]} and ${ks[2]} (MPI-ESM1-2-HR, UKESM1-0-LL, IPSL-CM6A-LR).`; }
+  box.innerHTML = `<div><h3>${esc(P.name)}</h3><div class="c">${esc(P.sub)}</div><p class="say">With a band of ${bandText()}: <b>${kn} pleasant month${kn === 1 ? "" : "s"}</b> in 1970 to 2000 (${monthsText(mn)}${why(P.now, kn)}), and <b style="color:var(--fut)">${kf}</b> in 2041 to 2060 (${monthsText(mf)}${why(P.fut, kf)}).${models}</p><div class="chart" id="prof"></div></div><div class="ring" id="ring"></div>`;
+  profChart(P); ringChart(P, mn, mf);
+}
+function profChart(P) {
+  const box = document.getElementById("prof"); const w = Math.max(280, box.clientWidth), h = 230, ml = 40, mr = 10, mt = 10, mb = 26;
+  const all = P.now.concat(P.fut, P.hi || [], P.lo || [], [S.lo, S.hi]); let y0 = Math.floor(Math.min(...all) / 5) * 5 - 2, y1 = Math.ceil(Math.max(...all) / 5) * 5 + 2;
+  const X = m => ml + (m + .5) / 12 * (w - ml - mr), Y = t => mt + (y1 - t) / (y1 - y0) * (h - mt - mb);
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img", "aria-label": `Monthly average daily high for ${P.name}` }, box);
+  el("rect", { x: ml, y: Y(Math.min(S.hi, y1)), width: w - ml - mr, height: Math.max(0, Y(Math.max(S.lo, y0)) - Y(Math.min(S.hi, y1))), fill: "var(--band)", opacity: .25 }, svg);
+  for (let t = Math.ceil(y0 / 5) * 5; t <= y1; t += 5) { el("line", { x1: ml, x2: w - mr, y1: Y(t), y2: Y(t), stroke: "var(--rule)" }, svg); lbl(svg, ml - 6, Y(t) + 4, S.unit === "F" ? Math.round(toF(t)) : t, "lab s m", "end"); }
+  lbl(svg, ml - 6, mt - 1 + 0, S.unit === "F" ? "°F" : "°C", "lab s m", "end").setAttribute("y", mt + 2);
+  MON.forEach((m, i) => lbl(svg, X(i), h - 8, w < 420 ? m[0] : m, "lab s m", "middle"));
+  if (P.lo) { let d = ""; for (let m = 0; m < 12; m++) d += (m ? "L" : "M") + X(m) + " " + Y(P.hi[m]); for (let m = 11; m >= 0; m--) d += "L" + X(m) + " " + Y(P.lo[m]); el("path", { d: d + "Z", fill: "var(--fut)", opacity: .15 }, svg); }
+  const line = (t, col, dash) => el("path", { d: t.map((v, m) => (m ? "L" : "M") + X(m) + " " + Y(v)).join(""), fill: "none", stroke: col, "stroke-width": 2, "stroke-dasharray": dash || "" }, svg);
+  line(P.now, "var(--now)"); line(P.fut, "var(--fut)", "5 3");
+  P.now.forEach((t, m) => el("circle", { cx: X(m), cy: Y(t), r: 4, fill: inb(t) ? "var(--now)" : "var(--card)", stroke: "var(--now)", "stroke-width": 1.5 }, svg));
+  P.fut.forEach((t, m) => el("circle", { cx: X(m), cy: Y(t), r: 4, fill: inb(t) ? "var(--fut)" : "var(--card)", stroke: "var(--fut)", "stroke-width": 1.5 }, svg));
+  for (let m = 0; m < 12; m++) { const hit = el("rect", { x: X(m) - (w - ml - mr) / 24, y: mt, width: (w - ml - mr) / 12, height: h - mt - mb, fill: "transparent" }, svg); hover(hit, () => `<b>${MONTHS[m]}</b><br>1970 to 2000: ${tU(P.now[m], 1)}${inb(P.now[m]) ? " (pleasant)" : ""}<br>2041 to 2060: ${tU(P.fut[m], 1)}${inb(P.fut[m]) ? " (pleasant)" : ""}${P.lo ? `<br>models: ${tU(P.lo[m], 1)} to ${tU(P.hi[m], 1)}` : ""}`); }
+  const lg = document.createElement("div"); lg.className = "legend"; lg.innerHTML = `<span><i class="sw" style="background:var(--now)"></i>1970 to 2000</span><span><i class="sw" style="background:var(--fut)"></i>2041 to 2060${P.lo ? " (shading: range of the three models)" : ""}</span><span><i class="sw" style="background:var(--band);opacity:.5"></i>your band; filled dots are pleasant months</span>`; box.appendChild(lg);
+}
+function ringChart(P, mn, mf) {
+  const box = document.getElementById("ring"); const svg = el("svg", { viewBox: "-84 -84 168 168", role: "img", "aria-label": "Ring of the twelve months: inner ring 1970 to 2000, outer ring 2041 to 2060" }, box);
+  const seg = (m, r0, r1, fill) => { const a0 = (m / 12) * 2 * Math.PI - Math.PI / 2 + .03, a1 = ((m + 1) / 12) * 2 * Math.PI - Math.PI / 2 - .03; el("path", { d: `M${r1 * Math.cos(a0)} ${r1 * Math.sin(a0)}A${r1} ${r1} 0 0 1 ${r1 * Math.cos(a1)} ${r1 * Math.sin(a1)}L${r0 * Math.cos(a1)} ${r0 * Math.sin(a1)}A${r0} ${r0} 0 0 0 ${r0 * Math.cos(a0)} ${r0 * Math.sin(a0)}Z`, fill }, svg); };
+  const col = t => inb(t) ? MPLEAS : t < S.lo ? MCOLD[1] : MHOT[1];
+  for (let m = 0; m < 12; m++) { seg(m, 28, 50, col(P.now[m])); seg(m, 54, 72, col(P.fut[m])); const a = ((m + .5) / 12) * 2 * Math.PI - Math.PI / 2; lbl(svg, 80 * Math.cos(a), 80 * Math.sin(a) + 3.5, MON[m][0], "lab s m", "middle"); }
+  lbl(svg, 0, -2, mn.filter(Boolean).length + " → " + mf.filter(Boolean).length, "lab b", "middle").setAttribute("style", "font-size:14px");
+  lbl(svg, 0, 13, "months", "lab s m", "middle");
+}
+
+/* ---------- live charts ---------- */
+function distData(wt) {
+  const a = new Float64Array(13), b = new Float64Array(13); let T = 0;
+  if (wt === "land") { for (let i = 0; i < G.n; i++) { a[G.cntNow[i]] += G.w[i]; b[G.cntFut[i]] += G.w[i]; } T = G.wsum; }
+  else { for (let i = 0; i < CT.n; i++) { const r = CT.rows[i]; if (!r[5]) continue; a[CT.cntNow[i]] += r[4]; b[CT.cntFut[i]] += r[4]; T += r[4]; } }
+  return [Array.from(a, v => v / T), Array.from(b, v => v / T)];
+}
+let drawDist, drawLat, drawMon;
+drawDist = resp(document.getElementById("dist"), (w, sm) => {
+  if (!ready) return; const [a, b] = distData(S.distW); const h = 240, ml = 40, mr = 8, mt = 10, mb = 34; const top = Math.max(...a, ...b) * 1.08;
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img", "aria-label": "Distribution of pleasant months a year" }, document.getElementById("dist"));
+  const bw = (w - ml - mr) / 13, X = k => ml + k * bw, Y = v => mt + (1 - v / top) * (h - mt - mb);
+  for (let t = 0; t <= top; t += top > .3 ? .1 : .05) { el("line", { x1: ml, x2: w - mr, y1: Y(t), y2: Y(t), stroke: "var(--rule)" }, svg); lbl(svg, ml - 6, Y(t) + 4, Math.round(t * 100) + "%", "lab s m", "end"); }
+  for (let k = 0; k <= 12; k++) { const g = bw * .38; [[a, 0, "var(--now)"], [b, 1, "var(--fut)"]].forEach(([d, j, c]) => { const x = X(k) + bw * .1 + j * (g + 2); const r = el("rect", { x, y: Y(d[k]), width: g, height: Math.max(0, Y(0) - Y(d[k])), fill: c, rx: 1.5 }, svg); hover(r, `<b>${k} pleasant month${k === 1 ? "" : "s"}</b><br>${j ? "2041 to 2060" : "1970 to 2000"}: ${pc(d[k], 1)} of ${S.distW === "land" ? "land" : "people in cities"}`); }); lbl(svg, X(k) + bw / 2, h - 18, k, "lab s m", "middle"); }
+  lbl(svg, ml + (w - ml - mr) / 2, h - 2, "pleasant months a year", "lab s m", "middle");
+});
+drawLat = resp(document.getElementById("lat"), (w, sm) => {
+  if (!ready) return; const bands = []; for (let a = -60; a < 85; a += 5) bands.push({ a, n: 0, f: 0, w: 0 });
+  for (let i = 0; i < G.n; i++) { const lat = 90 - (G.row[i] + .5) / 3; const k = Math.floor((lat + 60) / 5); if (k < 0 || k >= bands.length) continue; const b = bands[k]; b.n += G.cntNow[i] * G.w[i]; b.f += G.cntFut[i] * G.w[i]; b.w += G.w[i]; }
+  const B = bands.filter(b => b.w > 0).map(b => ({ a: b.a, n: b.n / b.w, f: b.f / b.w }));
+  const h = 330, ml = 46, mr = 12, mt = 8, mb = 30; const top = Math.max(1, ...B.map(b => Math.max(b.n, b.f))) * 1.05;
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img", "aria-label": "Mean pleasant months by latitude" }, document.getElementById("lat"));
+  const X = v => ml + v / top * (w - ml - mr), Y = lat => mt + (85 - lat) / 145 * (h - mt - mb);
+  for (let t = 0; t <= top; t += top > 6 ? 2 : 1) { el("line", { x1: X(t), x2: X(t), y1: mt, y2: h - mb, stroke: "var(--rule)" }, svg); lbl(svg, X(t), h - mb + 15, t, "lab s m", "middle"); }
+  [-60, -30, 0, 30, 60].forEach(l => { el("line", { x1: ml, x2: w - mr, y1: Y(l), y2: Y(l), stroke: l === 0 ? "var(--muted)" : "var(--rule)", "stroke-dasharray": l === 0 ? "" : "2 3" }, svg); lbl(svg, ml - 6, Y(l) + 4, l === 0 ? "0°" : Math.abs(l) + "°" + (l > 0 ? "N" : "S"), "lab s m", "end"); });
+  lbl(svg, ml + (w - ml - mr) / 2, h - 2, "mean pleasant months a year", "lab s m", "middle");
+  const path = (k, c, dash) => el("path", { d: B.map((b, i) => (i ? "L" : "M") + X(b[k]) + " " + Y(b.a + 2.5)).join(""), fill: "none", stroke: c, "stroke-width": 2, "stroke-dasharray": dash || "" }, svg);
+  path("n", "var(--now)"); path("f", "var(--fut)", "5 3");
+  B.forEach(b => { const r = el("rect", { x: ml, y: Y(b.a + 5), width: w - ml - mr, height: Y(b.a) - Y(b.a + 5), fill: "transparent" }, svg); hover(r, `<b>${Math.abs(b.a)}° to ${Math.abs(b.a + 5)}° ${b.a < 0 ? "S" : "N"}</b><br>1970 to 2000: ${f1(b.n)} months<br>2041 to 2060: ${f1(b.f)} months`); });
+});
+drawMon = resp(document.getElementById("bymonth"), (w, sm) => {
+  if (!ready) return; const a = new Float64Array(12), b = new Float64Array(12); let T = 0; const lo2 = 2 * S.lo, hi2 = 2 * S.hi;
+  if (S.monW === "land") { for (let m = 0; m < 12; m++) for (let i = 0; i < G.n; i++) { const v = G.now[m * G.n + i], u = G.fut[m * G.n + i]; if (v >= lo2 && v <= hi2) a[m] += G.w[i]; if (u >= lo2 && u <= hi2) b[m] += G.w[i]; } T = G.wsum; }
+  else { const lo = S.lo * 10, hi = S.hi * 10; for (let i = 0; i < CT.n; i++) { const r = CT.rows[i]; if (!r[5]) continue; T += r[4]; for (let m = 0; m < 12; m++) { const v = CT.tn[i * 12 + m], u = CT.tf[i * 12 + m]; if (v >= lo && v <= hi) a[m] += r[4]; if (u >= lo && u <= hi) b[m] += r[4]; } } }
+  const A = Array.from(a, v => v / T), Bf = Array.from(b, v => v / T);
+  const h = 230, ml = 40, mr = 8, mt = 10, mb = 26; const top = Math.max(.05, ...A, ...Bf) * 1.1;
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img", "aria-label": "Share pleasant by calendar month" }, document.getElementById("bymonth"));
+  const bw = (w - ml - mr) / 12, X = m => ml + m * bw, Y = v => mt + (1 - v / top) * (h - mt - mb);
+  for (let t = 0; t <= top; t += top > .3 ? .1 : .05) { el("line", { x1: ml, x2: w - mr, y1: Y(t), y2: Y(t), stroke: "var(--rule)" }, svg); lbl(svg, ml - 6, Y(t) + 4, Math.round(t * 100) + "%", "lab s m", "end"); }
+  for (let m = 0; m < 12; m++) { const g = bw * .36; [[A, 0, "var(--now)"], [Bf, 1, "var(--fut)"]].forEach(([d, j, c]) => { const r = el("rect", { x: X(m) + bw * .12 + j * (g + 2), y: Y(d[m]), width: g, height: Math.max(0, Y(0) - Y(d[m])), fill: c, rx: 1.5 }, svg); hover(r, `<b>${MONTHS[m]}</b><br>${j ? "2041 to 2060" : "1970 to 2000"}: pleasant for ${pc(d[m], 1)} of ${S.monW === "land" ? "land" : "people in cities"}`); }); lbl(svg, X(m) + bw / 2, h - 8, sm ? MON[m][0] : MON[m], "lab s m", "middle"); }
+});
+
+/* ---------- rankings ---------- */
+function rankTable() {
+  const T = document.getElementById("rank"); const dots = (mask, t) => `<span class="dots">${mask.map((p, m) => `<i class="${p ? "p" : t[m] > S.hi ? "h" : "c"}"></i>`).join("")}</span>`;
+  if (S.rank === "ctry") {
+    const agg = new Map(); for (let i = 0; i < CT.n; i++) { const r = CT.rows[i]; if (!r[5]) continue; let a = agg.get(r[1]); if (!a) agg.set(r[1], a = { k: r[1], p: 0, n: 0, f: 0, c: 0 }); a.p += r[4]; a.n += r[4] * CT.cntNow[i]; a.f += r[4] * CT.cntFut[i]; a.c++; }
+    let RL = [...agg.values()].filter(a => a.p >= 5e6 && a.c >= 5).map(a => ({ ...a, now: a.n / a.p, fut: a.f / a.p, d: (a.f - a.n) / a.p }));
+    const key = { most: (x, y) => y.now - x.now, least: (x, y) => x.now - y.now, loss: (x, y) => x.d - y.d, gain: (x, y) => y.d - x.d }[S.order]; RL.sort(key); RL = RL.slice(0, 15);
+    T.innerHTML = `<thead><tr><th>#</th><th>Country</th><th class="num">1970 to 2000</th><th class="num">2041 to 2060</th><th class="num">Change</th><th class="num wide">People in cities</th></tr></thead><tbody>` + RL.map((a, j) => `<tr class="go" data-cc="${a.k}"><td>${j + 1}</td><td>${esc(CT.country[a.k])}</td><td class="num">${f1(a.now)}</td><td class="num">${f1(a.fut)}</td><td class="num chg ${a.d > 0.05 ? "up" : a.d < -0.05 ? "dn" : ""}">${a.d > 0 ? "+" : ""}${f1(a.d)}</td><td class="num wide">${fmt(a.p)}</td></tr>`).join("") + "</tbody>";
+    T.querySelectorAll("tr.go").forEach(tr => tr.onclick = () => { const k = +tr.dataset.cc; let best = -1, bp = 0; for (let i = 0; i < CT.n; i++) if (CT.rows[i][1] === k && CT.rows[i][4] > bp && CT.rows[i][5]) { bp = CT.rows[i][4]; best = i; } if (best >= 0) select({ type: "city", i: best }, true); });
+  } else {
+    let RL = []; for (let i = 0; i < CT.n; i++) { const r = CT.rows[i]; if (r[5] && r[4] >= 1e6) RL.push({ i, now: CT.cntNow[i], fut: CT.cntFut[i], d: CT.cntFut[i] - CT.cntNow[i], p: r[4] }); }
+    const key = { most: (x, y) => y.now - x.now || y.p - x.p, least: (x, y) => x.now - y.now || y.p - x.p, loss: (x, y) => x.d - y.d || y.p - x.p, gain: (x, y) => y.d - x.d || y.p - x.p }[S.order]; RL.sort(key); RL = RL.slice(0, 15);
+    const tn = i => Array.from({ length: 12 }, (_, m) => CT.tn[i * 12 + m] / 10), tf = i => Array.from({ length: 12 }, (_, m) => CT.tf[i * 12 + m] / 10);
+    T.innerHTML = `<thead><tr><th>#</th><th>City</th><th class="num">Now</th><th class="num">2041 to 2060</th><th class="wide">Months now, then later (Jan to Dec)</th></tr></thead><tbody>` + RL.map((a, j) => { const n = tn(a.i), f = tf(a.i); return `<tr class="go" data-i="${a.i}"><td>${j + 1}</td><td>${esc(CT.rows[a.i][0])}<small>${esc(CT.country[CT.rows[a.i][1]])} · ${fmt(a.p)}</small></td><td class="num">${a.now}</td><td class="num chg ${a.d > 0 ? "up" : a.d < 0 ? "dn" : ""}">${a.fut}</td><td class="wide">${dots(n.map(inb), n)}<br>${dots(f.map(inb), f)}</td></tr>`; }).join("") + "</tbody>";
+    T.querySelectorAll("tr.go").forEach(tr => tr.onclick = () => select({ type: "city", i: +tr.dataset.i }, true));
+  }
+}
+(function sens() { const T = document.getElementById("sens"); T.innerHTML = `<thead><tr><th>Band (°C)</th><th class="num">Land now</th><th class="num">Land later</th><th class="num">Cities now</th><th class="num">Cities later</th><th class="num">Lose / gain</th></tr></thead><tbody>` + R.sensitivity.map(s => `<tr${s.lo === 18 && s.hi === 27 ? ' style="font-weight:500"' : ""}><td>${s.lo} to ${s.hi}</td><td class="num">${f1(s.land_now)}</td><td class="num">${f1(s.land_fut)}</td><td class="num">${f1(s.pop_now)}</td><td class="num">${f1(s.pop_fut)}</td><td class="num">${pc(s.pop_loss)} / ${pc(s.pop_gain)}</td></tr>`).join("") + "</tbody>"; })();
+(function cards() { const box = document.getElementById("yrCards"); box.innerHTML = R.big.year_round_now.slice(0, 8).map(c => `<div class="card" data-n="${esc(c.name)}" data-cc="${c.cc}"><b>${esc(c.name)}</b>${esc(c.country)} · ${fmt(c.pop)}<div class="big">12 → ${c.fut} <span>pleasant months</span></div></div>`).join(""); box.querySelectorAll(".card").forEach(d => d.onclick = () => { if (!ready) return; S.lo = 18; S.hi = 27; syncBand(); update(); select({ type: "city", i: findCity(d.dataset.n, d.dataset.cc) }, true); }); })();
+
+/* ---------- controls ---------- */
+const rlo = document.getElementById("rlo"), rhi = document.getElementById("rhi");
+function syncBand() {
+  rlo.value = S.lo; rhi.value = S.hi; document.getElementById("bandval").innerHTML = `${bandText()}<small>${S.unit === "F" ? `${S.lo} to ${S.hi} °C` : `${Math.round(toF(S.lo))} to ${Math.round(toF(S.hi))} °F`}</small>`;
+  const a = (S.lo + 10) / 50 * 100, b = (S.hi + 10) / 50 * 100; const s = document.getElementById("rsel"); s.style.left = `calc(${a}% - 4px)`; s.style.width = `calc(${b - a}% + 8px)`;
+  document.getElementById("ticks").innerHTML = [-10, 0, 10, 20, 30, 40].map(t => `<span>${S.unit === "F" ? Math.round(toF(t)) : t}</span>`).join("");
+  document.querySelectorAll("#presets .btn").forEach(bn => bn.setAttribute("aria-pressed", bn.dataset.b === `${S.lo},${S.hi}`));
+}
+let pending = false;
+function update(full) {
+  if (!ready) return; if (pending && !full) return; pending = true;
+  requestAnimationFrame(() => { pending = false; compute(); repaint(); legend(); stats(); drawPlace(); drawDist(); drawLat(); drawMon(); rankTable(); saveHash(); });
+}
+function saveHash() { try { history.replaceState(null, "", `#lo=${S.lo}&hi=${S.hi}&p=${S.period}&v=${S.view}&m=${S.month}&u=${S.unit}`); } catch (e) { } }
+rlo.addEventListener("input", () => { S.lo = Math.min(+rlo.value, S.hi); syncBand(); update(); });
+rhi.addEventListener("input", () => { S.hi = Math.max(+rhi.value, S.lo); syncBand(); update(); });
+document.querySelectorAll("#presets .btn").forEach(b => b.onclick = () => { const [lo, hi] = b.dataset.b.split(",").map(Number); S.lo = lo; S.hi = hi; syncBand(); update(); });
+function segs(id, attr, key, after) { const bs = document.querySelectorAll(`#${id} .btn`); const set = () => bs.forEach(b => b.setAttribute("aria-pressed", b.dataset[attr] === String(S[key]))); bs.forEach(b => b.onclick = () => { S[key] = b.dataset[attr]; set(); after(); }); set(); }
+segs("periodBtns", "p", "period", () => { if (S.view === "month" && S.period === "chg") { S.view = "count"; segsSync(); } update(); });
+segs("viewBtns", "v", "view", () => { if (S.view === "month" && S.period === "chg") { S.period = "now"; } segsSync(); update(); });
+segs("distW", "w", "distW", () => drawDist()); segs("monW", "w", "monW", () => drawMon());
+segs("rankWhat", "r", "rank", rankTable); segs("rankBy", "o", "order", rankTable);
+document.querySelectorAll("[data-unit]").forEach(b => b.onclick = () => { S.unit = b.dataset.unit; document.querySelectorAll("[data-unit]").forEach(x => x.setAttribute("aria-pressed", x.dataset.unit === S.unit)); syncBand(); drawPlace(); saveHash(); });
+document.querySelectorAll("[data-unit]").forEach(x => x.setAttribute("aria-pressed", x.dataset.unit === S.unit));
+const mb = document.getElementById("monthBtns"); mb.innerHTML = MON.map((m, i) => `<button class="btn" data-m="${i}" aria-label="${MONTHS[i]}">${m}</button>`).join("");
+mb.querySelectorAll(".btn").forEach(b => b.onclick = () => { S.month = +b.dataset.m; S.view = "month"; if (S.period === "chg") S.period = "now"; segsSync(); update(); });
+function segsSync() { document.querySelectorAll("#periodBtns .btn").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === S.period)); document.querySelectorAll("#viewBtns .btn").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === S.view)); mb.classList.toggle("off", S.view !== "month"); mb.querySelectorAll(".btn").forEach(b => b.setAttribute("aria-pressed", S.view === "month" && +b.dataset.m === S.month)); }
+segsSync(); syncBand();
+document.getElementById("theme").onclick = () => { const r = document.documentElement; r.dataset.theme = isDark() ? "light" : "dark"; basemap(); redraws.forEach(f => f()); drawPlace(); if (ready) { repaint(); legend(); } };
+load().catch(err => { document.getElementById("place").innerHTML = `<p class="loading">Sorry, the climate data did not load (${esc(err.message)}). This page needs a recent browser.</p>`; });
+</script>
+</body>
+</html>
