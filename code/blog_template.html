@@ -1,0 +1,154 @@
+<!-- wp:paragraph -->
+<p><em>Count the months in which the average afternoon high is between 18 and 27 °C and you get a strangely vivid map of the world. For the average person in the world's cities the answer is {{cities.now.mean|f1}} months a year. By the middle of the century it is {{cities.fut.mean|f1}}. And you can choose your own band.</em></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons -->
+<div class="wp-block-buttons"><!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="https://tristan-hotham.github.io/pleasant-months/">Explore the interactive version</a></div>
+<!-- /wp:button -->
+<!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="https://doi.org/10.5281/zenodo.23732576">Read the paper</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons -->
+
+<!-- wp:paragraph -->
+<p>Every so often a map goes round the internet showing how many months a year are "pleasantly warm" in each part of the world. People love it, argue about it, and then argue about what pleasant means. That last argument is the interesting one. A walker in Lancashire and a sun-seeker in Seville do not share a definition, and the climate of the 1980s is not the climate we are heading into.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>So I built my own version, on open data, where the reader sets the band. The rule is simple: take the average daily high for each month, the typical warmest part of the day, and call the month pleasant if it falls inside your band. My default is 18 to 27 °C (64 to 81 °F): warm enough to sit outside without a coat, not so hot that walking across town is a chore. Then count, for every patch of land and for {{cities.n|int}} cities of 15,000 people or more.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">A thin, warm fringe</h2>
+<!-- /wp:heading -->
+
+<!-- wp:image {"sizeSlug":"full"} -->
+<figure class="wp-block-image size-full">{{IMG|b_map_now.png|World map of pleasant months a year from 1 (pale apricot) to 12 (deep terracotta), with the tropical lowlands in pale mauve (too hot all year) and the far north and Tibet in pale blue (too cool all year). The darkest patches are the highlands of East Africa, Mexico, the Andes and Yunnan and the coasts of southern Africa and southern Brazil.|Pleasant months a year, average daily high 18 to 27 °C, climate of 1970 to 2000. Data: WorldClim 2.1.}}</figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>The map is a fringe. The Amazon, the Congo, India and Southeast Asia are too hot in every month; the Arctic and the Tibetan Plateau are too cool in every month. A third of all land outside Antarctica ({{land.now.zero|pct}}) never has a month in the band. The average patch of land gets {{land.now.mean|f1}} pleasant months a year, and only {{land.now.all12|pct1}} of it gets all twelve.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>People do a little better, because they cluster in the warm middle latitudes: the average city dweller gets {{cities.now.mean|f1}}. But a fifth of them ({{cities.now.zero|pct}}) live where no month qualifies, almost all because it is simply too hot. Lagos, Kinshasa, Mumbai, Bangkok, Jakarta and Singapore never have an average afternoon below 27 °C.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Spring all year</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Twelve pleasant months need a climate with almost no seasons and a warm but not hot day, and on Earth that mostly means altitude in the tropics. Of the {{big.n|int}} cities of a million people or more, {{big.all12_now|int}} managed it in 1970 to 2000: São Paulo, Lima, Addis Ababa, Caracas, Cali, Medellín, Curitiba, Antananarivo and Kigali among them. Sydney, Mexico City and Johannesburg came close with ten.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:image {"sizeSlug":"full"} -->
+<figure class="wp-block-image size-full">{{IMG|b_profiles.png|Six small charts of monthly average highs with the 18 to 27 °C band shaded. London rises into the band from June to September; Paris from May to September; São Paulo sits inside it all year; Bogotá sits just below it; Cape Town is inside most of the year; Delhi is above it for most of the year.|Average daily high by month in six cities, 1970 to 2000 (black) and 2041 to 2060 (orange, dashed). The shaded strip is the 18 to 27 °C band.}}</figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Those flat years are also fragile. When every month sits at much the same temperature, a uniform warming pushes months out of the band together, like a tray of glasses sliding off a table.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">The middle of the century</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>WorldClim also publishes climate model projections downscaled to the same grid. I took three models for 2041 to 2060 under SSP2-4.5, a middle-of-the-road emissions path, and averaged them. Afternoon highs on land rise by {{land.change.warming|f1}} °C on average over 1970 to 2000 (from {{derived.warm_min|f1}} to {{derived.warm_max|f1}} °C across the three models), and the fringe moves with them.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:image {"sizeSlug":"full"} -->
+<figure class="wp-block-image size-full">{{IMG|b_map_change.png|World map of the change in pleasant months by 2041 to 2060. Plum (losses) covers southern Africa, the Brazilian plateau, East Africa, Mexico, southern China and a band across the interiors of North America and Eurasia near 50 degrees north. Teal (gains) covers northern Canada, northern Europe, Siberia, the high Andes, Patagonia and New Zealand.|Change in pleasant months a year from 1970 to 2000 to 2041 to 2060, mean of three models under SSP2-4.5. Plum: fewer. Teal: more.}}</figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Months are lost at the hot end and gained at the cool end. The trouble is that most people live at the hot end. The average city dweller goes from {{cities.now.mean|f1}} pleasant months to {{cities.fut.mean|f1}}. {{cities.change.loss|pct}} of people in these cities lose at least one month and only {{cities.change.gain|pct}} gain one. Among the big cities, {{big.loss|int}} lose a month or more and {{big.gain|int}} gain, and the club of year-round cities shrinks from {{big.all12_now|int}} to {{big.all12_fut|int}}: São Paulo drops to {{named.São Paulo.fut|int}} months, Lima to {{named.Lima.fut|int}}, Kigali to {{named.Kigali.fut|int}}. Addis Ababa, Medellín and Arequipa hold on, and Cape Town and La Paz, cooler today, join them.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:pullquote -->
+<figure class="wp-block-pullquote"><blockquote><p>Warming does not just add summer. It takes months away at the hot end and hands them out at the cool end.</p></blockquote></figure>
+<!-- /wp:pullquote -->
+
+<!-- wp:image {"sizeSlug":"full"} -->
+<figure class="wp-block-image size-full">{{IMG|b_cities.png|Dumbbell chart of pleasant months in 29 cities now and in 2041 to 2060, with month-by-month strips. Bogotá rises from 3 to 11 and Cape Town from 9 to 12; Brasília falls from 9 to 0, Rio de Janeiro from 6 to 0 and São Paulo from 12 to 8; Paris and Berlin lose midsummer; London gains May.|Pleasant months a year in 29 cities: black 1970 to 2000, orange 2041 to 2060. Right: each month now (upper half) and later (lower half); orange pleasant, red too hot, blue too cool.}}</figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>The biggest losers are warm plateau cities that sit just under the top of the band: Brasília goes from {{named.Brasília.now|int}} pleasant months to {{named.Brasília.fut|int}}, Rio de Janeiro from {{named.Rio de Janeiro.now|int}} to {{named.Rio de Janeiro.fut|int}}. The biggest winners are cool highland cities just under the bottom of it: Bogotá goes from {{named.Bogotá.now|int}} to {{named.Bogotá.fut|int}}, and Quito from {{named.Quito.now|int}} to {{named.Quito.fut|int}}.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Summer splits in two</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>My favourite result is a quiet one. In {{big.split_n|int}} big cities, mostly in the northern mid-latitudes, one pleasant season becomes two. Paris goes from {{named.Paris.pn_txt|raw}} to {{named.Paris.pf_txt|raw}}: spring arrives earlier and autumn lasts longer, while the average July and August afternoon climbs above 27 °C. Berlin, Vienna, Warsaw, Kyiv, Toronto and Moscow do the same. Across all the cities, the month that is pleasant for the most people moves from May ({{cities.now.best_share|pct}} of them) to April ({{cities.fut.best_share|pct}}), and July and August fall to {{cities.fut.jul_aug|pct}}.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:image {"sizeSlug":"full"} -->
+<figure class="wp-block-image size-full">{{IMG|b_europe.png|Two maps of Europe and the Mediterranean coloured by pleasant months, 1970 to 2000 and 2041 to 2060. Britain, Ireland and Scandinavia darken; much of central and eastern Europe lightens.|Pleasant months a year in Europe, 1970 to 2000 (left) and 2041 to 2060 (right, three-model mean).}}</figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Britain is on the other side of the line. People in British cities get {{uk.mean_now|f1}} pleasant months on average now and {{uk.mean_fut|f1}} by mid-century, one of the biggest gains of any large country. London goes from {{named.London.now|int}} ({{named.London.pn_txt|raw}}) to {{named.London.fut|int}} ({{named.London.pf_txt|raw}}). That is a statement about afternoon temperatures, not a forecast of nice weather: it says nothing about rain, wind or heatwaves.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Pick your own band</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Everything above depends on my 18 to 27 °C, so the interactive map lets you drag the band anywhere from -10 to 40 °C, switch to Fahrenheit, flip between now, mid-century and the change, look at one month at a time and search any city. Every number on the page is recalculated in your browser as you move the handles. I also tried seven bands in the paper, from a cool 15 to 25 °C to a hot 22 to 32 °C. The levels change a lot. The direction never does: in every band, the average city dweller loses pleasant months, and more people lose than gain.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:image {"sizeSlug":"full"} -->
+<figure class="wp-block-image size-full">{{IMG|b_lat_months.png|Left: mean pleasant months by latitude, peaking at about 6 between 30 and 35 degrees south and at about 4 near 25 to 30 degrees north, with the mid-century line lower in the tropics and higher in the far north. Right: share of people in cities for whom each month is pleasant, highest in May now and April by mid-century, with July and August falling most.|Left: pleasant months by latitude. Right: share of city dwellers for whom each calendar month is pleasant. Black 1970 to 2000, orange 2041 to 2060.}}</figure>
+<!-- /wp:image -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">How I did this</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>The climate of 1970 to 2000 is WorldClim 2.1's monthly average of daily maximum temperature on a 10 arc-minute grid (about 18 km). The future is WorldClim's downscaled CMIP6 data for 2041 to 2060 under SSP2-4.5 from three models, MPI-ESM1-2-HR, UKESM1-0-LL and IPSL-CM6A-LR, averaged. That is three models and one scenario, and UKESM1-0-LL runs hot, so the paper reports each model too: the share of city dwellers losing a month is {{derived.models_city_loss_min|pct}} with the coolest model and {{derived.models_city_loss_max|pct}} with the hottest. Cities are the GeoNames list of places with 15,000 people or more, each given the climate of its nearest grid cell; for population totals I leave out city districts so nobody is counted twice, which covers {{derived.city_pop_bn|f1}} billion people, about half the world.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The caveats matter. This is afternoon highs only: humidity, nights, rain and sunshine are ignored, so a sticky 26 °C counts the same as a dry one. The grid smooths mountains and coasts. The baseline is 1970 to 2000, and the world has already warmed since. "Pleasant" is a label for a band, not a measure of comfort.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons -->
+<div class="wp-block-buttons"><!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="https://tristan-hotham.github.io/pleasant-months/">Explore the interactive version</a></div>
+<!-- /wp:button -->
+<!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="https://doi.org/10.5281/zenodo.23732576">Read the paper</a></div>
+<!-- /wp:button -->
+<!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="https://github.com/Tristan-Hotham/pleasant-months">Data and code</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">Notes and sources</h3>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>Climate 1970 to 2000: <a href="https://www.worldclim.org/">WorldClim 2.1</a>, Fick, S.E. and Hijmans, R.J. (2017) WorldClim 2: new 1-km spatial resolution climate surfaces for global land areas, <em>International Journal of Climatology</em> 37(12): 4302 to 4315 (CC BY 4.0).</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>Climate 2041 to 2060: <a href="https://www.worldclim.org/data/cmip6/cmip6climate.html">WorldClim downscaled CMIP6 data</a>, SSP2-4.5, models MPI-ESM1-2-HR, UKESM1-0-LL and IPSL-CM6A-LR (CC BY 4.0), from the Coupled Model Intercomparison Project Phase 6.</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>Cities: <a href="https://www.geonames.org/">GeoNames</a> cities15000 (CC BY 4.0). Country outlines: <a href="https://www.naturalearthdata.com">Natural Earth</a> (public domain).</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>Data and figures are released under CC BY 4.0 with credit to WorldClim and GeoNames; the code is MIT.</li>
+<!-- /wp:list-item -->
+<!-- wp:list-item -->
+<li>I wrote the text, with drafting and editing assistance from Claude (Anthropic), which also helped prepare the analysis code. I reviewed and checked all text and results.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->

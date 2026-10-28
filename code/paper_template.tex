@@ -1,0 +1,191 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Pagella}
+\newfontfamily\headfont{Inter}[UprightFont=*-ExtraBold,BoldFont=*-ExtraBold,Extension=.otf,Path=/usr/share/fonts/opentype/inter/]
+\usepackage[a4paper,margin=2.3cm]{geometry}
+\usepackage{graphicx,booktabs,float,caption,array}
+\usepackage[hidelinks]{hyperref}
+\usepackage{titlesec}
+\usepackage{setspace}
+\setstretch{1.05}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.75}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\titleformat{\section}{\headfont\Large}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\headfont\large}{\thesubsection}{0.8em}{}
+\captionsetup{font=small,labelfont=bf}
+\urlstyle{same}
+\hypersetup{pdftitle={How Many Months a Year Are Pleasantly Warm? Pleasant Months in the Climate of 1970 to 2000 and 2041 to 2060 from WorldClim},pdfauthor={Tristan Hotham}}
+
+\begin{document}
+\begin{center}
+{\Large\bfseries How Many Months a Year Are Pleasantly Warm?\\[2pt] Pleasant Months in the Climate of 1970 to 2000\\[2pt] and 2041 to 2060 from WorldClim\par}
+\vspace{1.2em}
+{\large Tristan Hotham\par}
+\vspace{0.3em}
+{\small Independent researcher\\
+ORCID: 0000-0003-4931-9349\\
+DOI: \href{https://doi.org/10.5281/zenodo.23732576}{https://doi.org/10.5281/zenodo.23732576}\par}
+\vspace{0.8em}
+2026
+\end{center}
+
+\begin{quote}
+\small
+\begin{center}\textbf{Abstract}\end{center}
+One simple way to describe how agreeable a climate is outdoors is to count the months whose average daily high falls inside a comfortable band. I count such months on the WorldClim 2.1 grid of monthly mean daily maximum temperature for 1970 to 2000 (10 arc-minutes) and on WorldClim's downscaled projections for 2041 to 2060 from three CMIP6 models under SSP2-4.5, and I weight the counts by land area and by the population of the {{cities.n|int}} GeoNames cities of 15,000 people or more. With a band of 18 to 27~\textdegree C, land outside Antarctica has {{land.now.mean|f1}} pleasant months a year on average; {{land.now.zero|pct}} of it has none, {{land.now.zero_cold|pct}} because it is too cool all year and {{land.now.zero_hot|pct}} because it is too hot. The average person in these cities has {{cities.now.mean|f1}} pleasant months, and {{cities.now.zero|pct}} live where no month qualifies, almost all because it is too hot. In the three-model mean for 2041 to 2060, the city average falls to {{cities.fut.mean|f1}}; {{cities.change.loss|pct}} of city dwellers lose at least one month and {{cities.change.gain|pct}} gain one. Cities with twelve pleasant months fall from {{big.all12_now|int}} to {{big.all12_fut|int}} of the {{big.n|int}} with a million people or more, and in {{big.split_n|int}} big cities of the northern mid-latitudes a single summer season splits into a spring and an autumn. The direction holds for seven alternative bands and for each model separately. The measure ignores humidity, nights and rain, and the grid smooths mountains and coasts; an interactive map lets readers set their own band.
+
+\textbf{Keywords:} climate; temperature; pleasant weather; thermal comfort; WorldClim; CMIP6; SSP2-4.5; cities; climate change; interactive maps
+\end{quote}
+
+\section{Introduction}
+
+Maps of the number of months a year that are ``pleasantly warm'' circulate widely online, and they are popular for a good reason: they turn a climate normal, twelve numbers per place, into one number that a reader can feel. The idea is old and simple. Take the average daily high for each month, decide what range of afternoon temperatures you would call pleasant, and count the months that fall inside it. A place with no pleasant months is either too cold all year or too hot all year; a place with twelve has something close to perpetual spring.
+
+That simplicity is also the weakness of a single static map. The answer depends on the band, and people disagree about bands: a walker in northern Europe and a beach holidaymaker do not share a definition. It depends on the period, because the climate of the late twentieth century is not the climate of the middle of this one. And a gridded map says nothing about where people live.
+
+This note does three things. First, it computes the count on a documented open grid, WorldClim 2.1 (Fick and Hijmans 2017), for the climate of 1970 to 2000, with a default band of 18 to 27~\textdegree C. Second, it repeats the count for 2041 to 2060 using WorldClim's downscaled projections from three models of the Coupled Model Intercomparison Project Phase 6 (Eyring et al.\ 2016) under the middle-of-the-road scenario SSP2-4.5 (O'Neill et al.\ 2016). Third, it weights the counts by population using the GeoNames list of cities of 15,000 people or more, so that the result speaks about people as well as land. The accompanying interactive page, \url{https://tristan-hotham.github.io/pleasant-months/}, lets readers move the band, switch periods, look at single months and search any city in the list; the page computes its statistics live in the browser.
+
+The question is descriptive. ``Pleasant'' here is a label for a band of afternoon temperatures, not a measure of human thermal comfort, which depends also on humidity, wind, sunshine and clothing (Jendritzky, de Dear and Havenith 2012). I return to these limits in Section~\ref{sec:limits}.
+
+\section{Data}
+
+\subsection{Climate in 1970 to 2000}
+
+WorldClim 2.1 provides monthly averages of daily maximum temperature for 1970 to 2000 on global land grids, interpolated from weather station records with covariates including elevation, distance to the coast and satellite data (Fick and Hijmans 2017). I use the 10 arc-minute version: 2,160 by 1,080 cells, about 18~km across at the equator. The grid has {{meta.cells_all|int}} land cells, of which {{meta.cells|int}} lie north of 60\textdegree~S; I leave out Antarctica, which has no pleasant months under any reasonable band and would dominate area statistics. I round the values to 0.1~\textdegree C.
+
+\subsection{Climate in 2041 to 2060}
+
+WorldClim also distributes CMIP6 projections downscaled and bias-corrected to the same grids (WorldClim 2024). I use monthly mean daily maximum temperature for 2041 to 2060 under SSP2-4.5 from three models: MPI-ESM1-2-HR (M\"uller et al.\ 2018), UKESM1-0-LL (Sellar et al.\ 2019) and IPSL-CM6A-LR (Boucher et al.\ 2020). The main results use the mean of the three models' monthly highs. Three models and one scenario are a small sample of possible futures, and UKESM1-0-LL is among the models whose climate sensitivity is higher than the assessed likely range (Hausfather et al.\ 2022), so I report each model separately as well. The downscaled grids leave out {{meta.filled_cells|int}} land cells that the baseline covers outside Antarctica ({{meta.filled_share|pct1}} of the land area), mostly on coasts, small islands and lake shores. For those cells I add the change (future minus baseline, for each model and month) of the nearest covered cell, a median of {{meta.filled_median_km|int}}~km away, to the baseline value.
+
+\subsection{Cities and countries}
+
+GeoNames publishes a list of populated places with 15,000 or more inhabitants (GeoNames 2026), {{cities.n_all|int}} places in the copy I used, with coordinates, country and population. Each city takes the climate of the land cell nearest to its point, a median of {{cities.median_km|f1}}~km away; one place more than 25~km from any land cell is left out. For population-weighted statistics I also leave out the {{cities.dropped_sections|int}} entries that GeoNames marks as sections of populated places (for example boroughs and districts) or as historical, abandoned or destroyed, so that people are not counted twice. This leaves {{cities.n|int}} cities with {{derived.city_pop_bn|f1}} billion people. GeoNames populations mix city proper and wider municipal definitions (Chongqing's 22 million is a whole municipality), so population-weighted figures describe people in listed cities, roughly half of humanity, and should be read as indicative. Countries come from the GeoNames country codes, and for area statistics from Natural Earth 1:50m country outlines (Natural Earth 2026).
+
+\section{Methods}
+
+A month is \emph{pleasant} when its mean daily maximum temperature $T$ satisfies $L \le T \le H$. The default band is $L = 18$~\textdegree C, $H = 27$~\textdegree C (about 64 to 81~\textdegree F). This band is my choice: warm enough to sit outside in shirt sleeves in the afternoon, not so hot that walking is a chore. It is not a standard, which is why the page lets readers move it and why I test seven bands (Section~\ref{sec:sens}). For each cell or city I count pleasant months (0 to 12) in 1970 to 2000 and in 2041 to 2060. A place with no pleasant months is \emph{too cool all year} if its warmest month is below $L$, \emph{too hot all year} if its coolest month is above $H$, and otherwise jumps over the band (this almost never happens with a 9 degree band).
+
+Land statistics weight each 10 arc-minute cell by its true area on the sphere. Population statistics weight each city by its GeoNames population. ``Big cities'' are the {{big.n|int}} cities with a million or more people. I also record, for each city, whether its pleasant months form one season or more than one, treating the year as a circle; a city whose single pleasant season in 1970 to 2000 becomes two separate seasons in 2041 to 2060 has a \emph{split} season.
+
+For the interactive page the grids are aggregated to 20 arc-minutes (the mean of the land cells in each 2 by 2 block) and stored as one byte per cell and month, coded so that comparisons with whole-degree band limits are exact. At the default band the page grid gives a land average of {{page.check.mean_now|f2}} pleasant months against {{land.now.mean|f2}} on the full grid; city figures on the page use the same 0.1~\textdegree C values as this note. Maps in this note use the Equal Earth projection (\v{S}avri\v{c}, Patterson and Jenny 2019).
+
+\section{Results}
+
+\subsection{The pleasant fringe}
+
+Figure~\ref{fig:map} maps the count for 1970 to 2000. The pattern is a fringe. The tropical lowlands of South America, Africa, South and Southeast Asia and northern Australia are too hot in every month, and the far north, the Tibetan Plateau and the high Andes are too cool in every month. Between them lie belts of a few pleasant months, widest in the mid-latitudes, and small patches of many: the highlands of East Africa, Mexico, the northern Andes and Yunnan, the coasts and plateaus of southern Africa and southern Brazil, and the Mediterranean climates of California, Chile and south-western Australia.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=\textwidth]{f_map_now.png}
+\caption{Pleasant months a year (average daily high 18 to 27~\textdegree C), 1970 to 2000. WorldClim 2.1, 10 arc-minutes, Equal Earth projection. Antarctica not shown.}\label{fig:map}
+\end{figure}
+
+Averaged over land outside Antarctica, the count is {{land.now.mean|f2}} months. A third of the land ({{land.now.zero|pct1}}) has no pleasant month: {{land.now.zero_cold|pct1}} too cool all year and {{land.now.zero_hot|pct1}} too hot all year. {{land.now.ge6|pct1}} has six or more pleasant months, and {{land.now.all12|pct1}}, about {{derived.land_km2_12_now_m|f1}} million km\textsuperscript{2}, has twelve. People are concentrated where the count is higher: the population-weighted mean over the cities is {{cities.now.mean|f2}} months, and {{cities.now.ge6|pct1}} of city dwellers have six or more. But {{cities.now.zero|pct1}} have none, and for almost all of them ({{cities.now.zero_hot|pct1}} of the total) the reason is heat (Figure~\ref{fig:dist}). Lagos, Kinshasa, Mumbai, Ho Chi Minh City, Bangkok, Jakarta, Manila and Singapore are among the largest cities with no month whose average high is below 27~\textdegree C.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=\textwidth]{f_dist.png}
+\caption{Distribution of pleasant months a year, by land area (left) and by the population of GeoNames cities of 15,000 or more (right), for 1970 to 2000 and 2041 to 2060 (three-model mean, SSP2-4.5). Band 18 to 27~\textdegree C.}\label{fig:dist}
+\end{figure}
+
+By latitude (Figure~\ref{fig:lat}, left) the count peaks in two belts. The southern belt is the stronger: land between 30 and 35\textdegree~S has {{land.lat_peak.now|f2}} pleasant months on average, the highest of any 5 degree band. In the northern hemisphere the peak is lower and broader, from about 25\textdegree~N to 55\textdegree~N. The more maritime southern mid-latitudes have smaller seasonal swings, so more months sit inside a 9 degree band.
+
+Across the calendar (Figure~\ref{fig:lat}, right), the most widely pleasant month for city dwellers is {{cities.now.best_month|raw}}, pleasant for {{cities.now.best_share|pct1}} of them, followed by the other shoulder months, April, September and October. July and August are pleasant for only about a quarter ({{cities.now.jul_aug|pct1}} on average), because they are too hot across much of South Asia, the Middle East, China and the southern United States. By land area the peak is in {{land.now.best_month|raw}} ({{land.now.best_share|pct1}} of land), when the large northern continents warm into the band.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=\textwidth]{f_lat_months.png}
+\caption{Left: area-weighted mean pleasant months on land in 5 degree bands of latitude. Right: share of people in GeoNames cities for whom each calendar month is pleasant. Band 18 to 27~\textdegree C; 2041 to 2060 is the three-model mean under SSP2-4.5.}\label{fig:lat}
+\end{figure}
+
+\subsection{Twelve pleasant months}
+
+Of the {{big.n|int}} big cities, {{big.all12_now|int}} had twelve pleasant months in 1970 to 2000 (Table~\ref{tab:yr}). They are almost all at altitude in the tropics or on cool subtropical coasts: São Paulo, Lima, Addis Ababa, Caracas, Cali, Medellín, Curitiba, Ecatepec de Morelos in the Valley of Mexico, Antananarivo, Guarulhos, Callao, Arequipa, Kigali and Gqeberha. Their climates share a small annual range of temperature, which is also what makes their counts fragile: when every month is near the same temperature, a uniform warming moves months out of the band together.
+
+{{TABLE_YR}}
+
+\subsection{The middle of the century}
+
+In the three-model mean, the average daily high on land outside Antarctica in 2041 to 2060 is {{land.change.warming|f2}}~\textdegree C above 1970 to 2000 (MPI-ESM1-2-HR {{land.change.models.0.warming|f2}}, UKESM1-0-LL {{land.change.models.1.warming|f2}}, IPSL-CM6A-LR {{land.change.models.2.warming|f2}}~\textdegree C). Figure~\ref{fig:change} maps the change in pleasant months. Losses dominate in the subtropics and the tropical highlands (southern Africa from Angola to Zimbabwe, the Brazilian plateau, East Africa, Mexico and southern China) and in a band across the interiors of North America and Eurasia near 50\textdegree~N, where midsummer leaves the band. Gains appear at the cool edge: northern Europe, much of Canada and Siberia, the high Andes, Patagonia, New Zealand and the margins of the Tibetan Plateau.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=\textwidth]{f_map_change.png}
+\caption{Change in pleasant months a year from 1970 to 2000 to 2041 to 2060 (mean of MPI-ESM1-2-HR, UKESM1-0-LL and IPSL-CM6A-LR, SSP2-4.5). Band 18 to 27~\textdegree C. White: no pleasant month in either period.}\label{fig:change}
+\end{figure}
+
+Over land the mean falls from {{land.now.mean|f2}} to {{land.fut.mean|f2}} months; {{land.change.loss|pct1}} of land loses at least one month, {{land.change.gain|pct1}} gains and {{land.change.same|pct1}} is unchanged. The area with twelve months shrinks from {{derived.land_km2_12_now_m|f2}} to {{derived.land_km2_12_fut_m|f2}} million km\textsuperscript{2}, and the share of land with none rises from {{land.now.zero|pct1}} to {{land.fut.zero|pct1}}, as the area too hot all year grows from {{land.now.zero_hot|pct1}} to {{land.fut.zero_hot|pct1}} and the area too cool all year shrinks from {{land.now.zero_cold|pct1}} to {{land.fut.zero_cold|pct1}}.
+
+For people the shift is larger, because people live disproportionately at the warm edge. The population-weighted mean falls from {{cities.now.mean|f2}} to {{cities.fut.mean|f2}} months. {{cities.change.loss|pct1}} of city dwellers live in a city that loses at least one pleasant month and {{cities.change.gain|pct1}} in one that gains; the share with none rises from {{cities.now.zero|pct1}} to {{cities.fut.zero|pct1}}. For {{cities.shift.lost_heat|pct1}} of city dwellers at least one month that was pleasant becomes too hot, and for {{cities.shift.gain_cold|pct1}} at least one month that was too cool becomes pleasant; on average {{cities.shift.months_lost_heat|f2}} months per person are lost to heat and {{cities.shift.months_gain_cold|f2}} gained from cold. Among big cities, {{big.loss|int}} lose at least one month, {{big.gain|int}} gain and {{big.same|int}} keep the same count, and only {{big.all12_fut|int}} keep or reach twelve months: Addis Ababa, Medellín and Arequipa keep them, and Cape Town and La Paz, cooler today, reach them.
+
+The calendar also shifts. In 2041 to 2060 {{cities.fut.best_month|raw}} becomes the most widely pleasant month for city dwellers ({{cities.fut.best_share|pct1}}), and July and August fall to {{cities.fut.jul_aug|pct1}} on average. In {{big.split_n|int}} big cities, mostly in the northern mid-latitudes, one pleasant season becomes two, separated by a summer whose average high is now above 27~\textdegree C. Paris goes from {{named.Paris.pn_txt|raw}} to {{named.Paris.pf_txt|raw}}; Berlin, Vienna, Warsaw, Kyiv, Toronto and Moscow show the same pattern. Figure~\ref{fig:europe} shows how this plays out across Europe and the Mediterranean: counts rise in the British Isles, the Low Countries and Scandinavia and fall across much of central and eastern Europe, from France to Ukraine.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=\textwidth]{f_europe.png}
+\caption{Pleasant months a year in Europe and the Mediterranean, 1970 to 2000 (left) and 2041 to 2060 (right, three-model mean, SSP2-4.5). Band 18 to 27~\textdegree C.}\label{fig:europe}
+\end{figure}
+
+Figure~\ref{fig:cities} follows a selection of large and familiar cities. The largest losses among big cities are in the tropical highlands and warm plateaus: Brasília ({{named.Brasília.now|int}} to {{named.Brasília.fut|int}}), Bandung ({{named.Bandung.now|int}} to {{named.Bandung.fut|int}}), Kampala ({{named.Kampala.now|int}} to {{named.Kampala.fut|int}}), Kigali ({{named.Kigali.now|int}} to {{named.Kigali.fut|int}}). The largest gains are in cool highland cities: Bogotá ({{named.Bogotá.now|int}} to {{named.Bogotá.fut|int}}), Quito ({{named.Quito.now|int}} to {{named.Quito.fut|int}}), La Paz ({{named.La Paz.now|int}} to {{named.La Paz.fut|int}}) and Kunming ({{named.Kunming.now|int}} to {{named.Kunming.fut|int}}). By country (Table~\ref{tab:ctry}), the largest population-weighted losses are in Uganda, Zambia, Madagascar and Kenya; the largest gains in Sweden and the United Kingdom, where the population-weighted count rises from {{uk.mean_now|f2}} to {{uk.mean_fut|f2}} and London goes from {{named.London.now|int}} months ({{named.London.pn_txt|raw}}) to {{named.London.fut|int}} ({{named.London.pf_txt|raw}}).
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=\textwidth]{f_cities.png}
+\caption{Pleasant months a year in selected cities, 1970 to 2000 (black) and 2041 to 2060 (orange, three-model mean, SSP2-4.5). Teal lines mark gains and plum lines losses. Right: each month, upper half 1970 to 2000 and lower half 2041 to 2060; orange pleasant, red too hot, blue too cool.}\label{fig:cities}
+\end{figure}
+
+{{TABLE_CTRY}}
+
+\subsection{Sensitivity to the band and the models}\label{sec:sens}
+
+Table~\ref{tab:sens} repeats the main statistics for seven bands, from a cool 15 to 25~\textdegree C to a hot 22 to 32~\textdegree C. The levels move a good deal: a warmer band gives more pleasant months now and moves the fringe towards the tropics. The direction does not move. In every band the population-weighted mean falls by mid-century and more city dwellers lose months than gain them. The three models agree on the direction but not on the size: under the default band, the share of city dwellers who lose at least one month is {{cities.change.models.0.loss|pct1}} with MPI-ESM1-2-HR, {{cities.change.models.2.loss|pct1}} with IPSL-CM6A-LR and {{cities.change.models.1.loss|pct1}} with UKESM1-0-LL, and the number of big cities losing at least one month is {{big.models_loss.0|int}}, {{big.models_loss.2|int}} and {{big.models_loss.1|int}} respectively.
+
+{{TABLE_SENS}}
+
+\section{Discussion}
+
+The count of pleasant months is a crude statistic, but it makes a familiar point vivid in two ways. First, the places with the most agreeable afternoon temperatures are not where most people live. Large tropical lowland cities have no month in an 18 to 27~\textdegree C band at all, and the places with many pleasant months are a scattered set of highlands and maritime subtropical coasts. Second, warming does not simply ``add summer''. It removes months at the hot end and adds them at the cool end. Because people are concentrated at the warm end of the range, and because the places that now have the most pleasant months have flat annual cycles near the top of the band, losses outweigh gains for the average city dweller in every band I tried.
+
+The finding that a single summer season can split into spring and autumn seasons is a direct consequence of the counting rule: a mid-latitude city whose July high is currently around 24~\textdegree C needs only a few degrees of warming to push July above the band while April and October warm into it. This does not mean that summer in Paris becomes unpleasant for everyone; it means that the average July afternoon moves above a threshold that a reader may or may not share. The interactive page exists so that readers can see how the picture changes with their own threshold.
+
+\section{Limitations}\label{sec:limits}
+
+The main limits are these. (1) The band is arbitrary and uses daily highs only: humidity, wind, sunshine, rain and night temperatures are ignored, so a humid 26~\textdegree C counts the same as a dry one. Indices such as the Universal Thermal Climate Index combine these factors (Jendritzky, de Dear and Havenith 2012) and would give a different and better measure of comfort. (2) Monthly means hide day-to-day variability and heatwaves. (3) The 10 arc-minute grid smooths steep terrain and coasts, so a hillside town or a sea-cooled waterfront can differ from its cell, and each city takes a single cell. (4) The baseline is 1970 to 2000; the climate has warmed since, so the present day lies part of the way to the mid-century projection. (5) The projections use three models and one scenario, with a gap-filling step for {{meta.filled_share|pct1}} of the land area; other models and scenarios would give different magnitudes. (6) GeoNames populations are inconsistent in definition and cover only listed cities, roughly half of the world's people. (7) For the page, the grid is coarsened to 20 arc-minutes.
+
+\section{Conclusion}
+
+With an afternoon band of 18 to 27~\textdegree C, the average person in the world's listed cities had {{cities.now.mean|f1}} pleasant months a year in the climate of 1970 to 2000 and, in the mean of three CMIP6 models under SSP2-4.5, would have {{cities.fut.mean|f1}} in 2041 to 2060. Losses at the hot end outweigh gains at the cool end, the rare cities with pleasant weather all year become rarer, and in many northern cities the pleasant season splits around a summer that is too hot. The interactive page lets readers test whether that holds for their own idea of a pleasant day.
+
+\section*{Data and code availability}
+
+Data and code: \url{https://github.com/Tristan-Hotham/pleasant-months}. Interactive version: \url{https://tristan-hotham.github.io/pleasant-months/}. Archived release: \url{https://doi.org/10.5281/zenodo.23732576}. The derived data (city table, country table, pleasant-month grids and the page's compact grids) are released under CC BY 4.0 with credit to WorldClim and GeoNames; the text and figures under CC BY 4.0; the code under the MIT licence.
+
+\section*{AI statement}
+
+I wrote the text, with drafting and editing assistance from Claude (Anthropic), which also helped prepare the analysis code. I reviewed and checked all text and results.
+
+\section*{References}
+\small
+Boucher, O. et al.\ (2020) Presentation and evaluation of the IPSL-CM6A-LR climate model. \emph{Journal of Advances in Modeling Earth Systems} 12, e2019MS002010.
+
+Eyring, V., Bony, S., Meehl, G.A., Senior, C.A., Stevens, B., Stouffer, R.J.\ and Taylor, K.E.\ (2016) Overview of the Coupled Model Intercomparison Project Phase 6 (CMIP6) experimental design and organization. \emph{Geoscientific Model Development} 9, 1937 to 1958.
+
+Fick, S.E.\ and Hijmans, R.J.\ (2017) WorldClim 2: new 1-km spatial resolution climate surfaces for global land areas. \emph{International Journal of Climatology} 37(12), 4302 to 4315. Data: \url{https://www.worldclim.org} (CC BY 4.0).
+
+GeoNames (2026) cities15000: all cities with a population of 15,000 or more. CC BY 4.0. \url{https://download.geonames.org/export/dump/} (retrieved October 2026).
+
+Hausfather, Z., Marvel, K., Schmidt, G.A., Nielsen-Gammon, J.W.\ and Zelinka, M.\ (2022) Climate simulations: recognize the `hot model' problem. \emph{Nature} 605, 26 to 29.
+
+Jendritzky, G., de Dear, R.\ and Havenith, G.\ (2012) UTCI: why another thermal index? \emph{International Journal of Biometeorology} 56, 421 to 428.
+
+M\"uller, W.A.\ et al.\ (2018) A higher-resolution version of the Max Planck Institute Earth System Model (MPI-ESM1.2-HR). \emph{Journal of Advances in Modeling Earth Systems} 10, 1383 to 1413.
+
+Natural Earth (2026) Admin 0 countries, 1:50m. Public domain. \url{https://www.naturalearthdata.com}
+
+O'Neill, B.C.\ et al.\ (2016) The Scenario Model Intercomparison Project (ScenarioMIP) for CMIP6. \emph{Geoscientific Model Development} 9, 3461 to 3482.
+
+\v{S}avri\v{c}, B., Patterson, T.\ and Jenny, B.\ (2019) The Equal Earth map projection. \emph{International Journal of Geographical Information Science} 33(3), 454 to 465.
+
+Sellar, A.A.\ et al.\ (2019) UKESM1: description and evaluation of the U.K. Earth System Model. \emph{Journal of Advances in Modeling Earth Systems} 11, 4513 to 4558.
+
+WorldClim (2024) Future climate data, CMIP6 downscaled, 10 minutes, 2041 to 2060, SSP2-4.5. CC BY 4.0. \url{https://www.worldclim.org/data/cmip6/cmip6climate.html}
+\end{document}
